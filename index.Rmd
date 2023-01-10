@@ -1,5 +1,13 @@
 ---
-title: "Data Visualisation with R"
+title: "Exploring the heterogeneity in liver cancer scRNA-seq data with LDA"
+author: "Xiyu Peng"
+date: "Jan 10th, 2023"
+output:
+    html_document:
+      toc: true
+      toc_float: true 
+      theme: united
 ---
 
-Hello, Website!
+
+
