@@ -1,0 +1,342 @@
+---
+title: "Analysis on a scRNA-seq data on liver tumor tissue"
+output:
+    html_document:
+      toc: true
+      toc_float: true 
+      theme: united
+---
+Xiyu Peng
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir= normalizePath('..'))
+knitr::opts_chunk$set(error = FALSE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r}
+library(corrplot)
+library(tidyverse)
+library(pheatmap)
+library(topicmodels)
+library(slam)
+library(ggpubr)
+library(tidytext)
+library(survminer)
+library(survival)
+library(RColorBrewer)
+```
+
+* liver cancer data
+
+```{r}
+metadata.sel.count_tumor_tissue <- read.csv("~/flow_cytometry/manuscript/liver cancer data/metadata-sel-count_tumor_tissue.csv")
+removed_clusters<-c("CD4T_01_CCR7", "CD4T_09_FOXP3", "CD8T_01_CCR7", "CD8T_02_CX3CR1", 
+"CD8T_03_GZMK_S1PR1", "gdT_01_GNLY_S1PR5", "NK_01_FCGR3A_CX3CR1", 
+"MonoDC", "Mo_01_CD14", "Mo_02_CD16", "Neu_02_S100A12", "Neu_03_ISG15", "Neu_04_TXNIP")
+rownames(metadata.sel.count_tumor_tissue)<-metadata.sel.count_tumor_tissue$X
+metadata.sel.count_tumor_tissue<-as.data.frame(metadata.sel.count_tumor_tissue[,-1])
+data_matrix<-metadata.sel.count_tumor_tissue
+data_matrix<- data_matrix %>% dplyr::select(!removed_clusters)
+```
+
+* heatmap
+
+```{r}
+M<-cor(data_matrix/rowSums(data_matrix))
+ComplexHeatmap::pheatmap(M,heatmap_legend_param = list(title = "Correlation"))
+```
+
+
+
+```{r,eval=FALSE}
+count_matrix_triplet <- as.simple_triplet_matrix(as.matrix(data_matrix))
+lda<-LDA(count_matrix_triplet, control = list(seed = 2021, burnin = 1000,thin = 100, iter = 1000), k = 5, method = "Gibbs")
+topics(lda)
+terms(lda,10)
+para<-posterior(lda)
+save(lda, file = "~/flow_cytometry/manuscript/liver cancer data/LDA_K5_filtered.Rdata")
+ntopics<-5
+```
+
+# number of topics = 5
+
+```{r}
+ntopics<-5
+load(file = "~/flow_cytometry/manuscript/liver cancer data/LDA_K5_filtered.Rdata")
+```
+
+
+```{r,fig.width=5}
+#### update to X50_res0.8
+metadata.sel.count_tumor_tissue$topic<-topics(lda)
+para<-posterior(lda)
+colnames(para$topic)<-paste0("topic",colnames(para$topic))
+metadata.sel.count_tumor_tissue<-as.data.frame(cbind(metadata.sel.count_tumor_tissue,para$topic))
+
+### beta
+ap_topics <- tidy(lda, matrix = "beta")
+ap_topics$topic<-as.factor(paste0("topic",ap_topics$topic))
+#levels(ap_topics$topic)<-c("Activation topic", "Naive topic", "Exhaustion topic")
+
+term_reorder<-as.character(1:21)
+ggbarplot(ap_topics, x = "term", y = "beta",color = "topic",fill = "topic",facet.by = "topic",nrow = ntopics)+xlab("cell cluster")+ylab("topic weight")
+
+ap_topics %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 10) %>% 
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE,orientation = "y") +
+  facet_wrap(~ topic, scales = "free") + 
+  scale_y_reordered()+theme_bw()+
+  xlab("topic weight")+ylab("cell cluster")
+```
+
+
+## select representative clusters with lift
+
+```{r}
+### calcualte the lift
+wordcounts <- colSums(data_matrix)
+logbeta <- lda@beta
+emp.prob <- log(wordcounts) - log(sum(wordcounts))
+lift <- logbeta - rep(emp.prob, each = nrow(logbeta))
+colnames(lift)<-lda@terms
+lift<-as.data.frame(lift)
+lift$topic<-paste0("topic",1:ntopics)
+
+### show top clusters for each topic
+lift_top_terms <- lift %>% gather(.,key = cluster,value = lift,-topic) %>%
+  group_by(topic) %>%
+  slice_max(lift, n = 10) %>% 
+  ungroup() %>%
+  arrange(topic, -lift)
+
+lift_top_terms %>%
+  mutate(cluster = reorder_within(cluster, lift, topic)) %>%
+  ggplot(aes(lift, cluster, fill = factor(topic))) +
+  geom_col(show.legend = FALSE,orientation = "y") +
+  facet_wrap(~ topic, scales = "free") + 
+  scale_y_reordered()+theme_bw()+
+  xlab("lift (log-ratio of topic weight over cell cluster frequency)")+ylab("cell cluster")
+```
+
+
+
+```{r}
+### show top clusters for each topic
+lift_all_terms <- lift %>% gather(.,key = cluster,value = lift,-topic) %>%
+  group_by(topic) %>%
+  ungroup() %>%
+  arrange(topic, -lift)
+```
+
+## Link to TIME subtypes identified in the original paper
+
+* TIME-IA
+
+```{r,eval=FALSE}
+cluster_list<- c("CD4T_07_CXCL13","CD4T_08_STMN1","CD8T_10_PDCD1","CD8T_13_STMN1","DC_03_LAMP3","Mph_06_CXCL9")
+
+ap_topics %>% filter(term %in% cluster_list) %>% arrange(term,beta) %>% View()
+
+ap_topics %>% filter(term %in% cluster_list) %>% filter(topic == "topic4")
+
+lift_all_terms %>% filter(cluster %in% cluster_list) %>% arrange(cluster,lift) %>% View()
+
+lift_all_terms %>% filter(cluster %in% cluster_list)  %>% filter(topic == "topic4")
+```
+
+* TIME-ISM
+
+```{r,eval=FALSE}
+cluster_list<- c("Mph_02_CCL20","Mph_03_SPP1","Neu_09_IFIT1","CD8T_13_STMN1","DC_03_LAMP3","Mph_06_CXCL9")
+
+ap_topics %>% filter(term %in% cluster_list) %>% arrange(term,beta) %>% View()
+
+ap_topics %>% filter(term %in% cluster_list) %>% filter(topic %in% c("topic2","topic4"))
+
+lift_all_terms %>% filter(cluster %in% cluster_list) %>% arrange(cluster,lift) %>% View()
+
+lift_all_terms %>% filter(cluster %in% cluster_list)  %>% filter(topic %in% c("topic2","topic4")) %>% arrange(cluster,lift) 
+```
+
+* TIME-ISS
+
+```{r,eval=FALSE}
+cluster_list<- c("CD4T_04_BAG3","CD4T_06_PLCG2","EC_03_TFF3","Fb_01_FAP","Mph_04_TREM2","NK_06_ITGA1")
+
+ap_topics %>% filter(term %in% cluster_list) %>% arrange(term,beta) %>% View()
+
+ap_topics %>% filter(term %in% cluster_list) %>% filter(topic %in% c("topic5")) %>% arrange(term,beta) 
+
+lift_all_terms %>% filter(cluster %in% cluster_list) %>% arrange(cluster,lift) %>% View()
+
+lift_all_terms %>% filter(cluster %in% cluster_list)  %>% filter(topic %in% c("topic5")) %>% arrange(cluster,lift)
+```
+
+* TIME-IE
+
+```{r,eval=FALSE}
+cluster_list<- c("CD8T_08_GZMK","EC_07_KDR_APOA2","EC_08_IGFBP3","Fb_01_FAP","Mph_04_TREM2","NK_06_ITGA1")
+
+ap_topics %>% filter(term %in% cluster_list) %>% arrange(term,beta) %>% View()
+
+ap_topics %>% filter(term %in% cluster_list) %>% filter(topic %in% c("topic3")) %>% arrange(term,beta) 
+
+lift_all_terms %>% filter(cluster %in% cluster_list) %>% arrange(cluster,lift) %>% View()
+
+lift_all_terms %>% filter(cluster %in% cluster_list)  %>% filter(topic %in% c("topic3")) %>% arrange(cluster,lift)
+```
+
+* TIME-IR
+
+```{r,eval=FALSE}
+cluster_list<- c("CD4T_03_GPR183","DC_01_CLEC9A","EC_01_CLEC4A","Mph_01_MARCO","Neu_07_APOA2","NK_05_CD160")
+
+ap_topics %>% filter(term %in% cluster_list) %>% arrange(term,beta) %>% View()
+
+ap_topics %>% filter(term %in% cluster_list) %>% filter(topic %in% c("topic3","topic1")) %>% arrange(term,beta) 
+
+lift_all_terms %>% filter(cluster %in% cluster_list) %>% arrange(cluster,lift) %>% View()
+
+lift_all_terms %>% filter(cluster %in% cluster_list)  %>% filter(topic %in% c("topic3","topic1")) %>% arrange(cluster,lift)
+```
+
+## link to patient level data
+
+* Extract Gamma 
+
+```{r}
+gamma_data<-as.data.frame(para$topics)
+colnames(gamma_data)<-paste0("topic",1:5)
+```
+
+* Incorporate Metadata
+
+```{r}
+metadata.sel.count_tumor_tissue$pt<- gsub("_.*","",rownames(gamma_data))
+
+clinical_data <- read.csv("~/flow_cytometry/manuscript/liver cancer data/liver_cancer_patient_clinical_data.csv",skip = 2)
+TIME_subtype<-read.csv("~/flow_cytometry/manuscript/liver cancer data/TIME_subtypes.csv",skip = 2)
+metadata.sel.count_tumor_tissue$sample<-rownames(metadata.sel.count_tumor_tissue)
+clinical_data_merge<-merge(metadata.sel.count_tumor_tissue,clinical_data,by.x = "pt", by.y = "Patient")
+clinical_data_merge<-merge(clinical_data_merge,TIME_subtype,by.x = "pt", by.y = "Patient")
+dim(clinical_data_merge)
+
+#pt_meta<- clinical_data_merge %>% select(pt,Cancer_type_short,Differentiation,"Relapse_state..Yes.0.","FPS_time","OS_state..Yes.0.","OS_time", TIMELASER)
+```
+
+* Only use HCC, CHC, ICC subtypes
+
+```{r,fig.height= 12, fig.width=12}
+## only use HCC, CHC, ICC subtype
+clinical_data_merge_sub <- clinical_data_merge %>% filter(Cancer_type_short %in% c("HCC","ICC","CHC")) 
+pt_meta_sub  <- clinical_data_merge_sub %>% select(pt,Cancer_type_short,Differentiation,"Relapse_state..Yes.0.", "FPS_time","OS_state..Yes.0.","OS_time", TIMELASER)
+
+gamma_data_sub<-gamma_data[clinical_data_merge_sub$sample,]
+rows.tree<-hclust(dist(gamma_data_sub))
+
+group<-as.data.frame(cutree(rows.tree,5))
+colnames(group)<-"Group"
+group$Group<-paste0("group",group$Group)
+
+pt_meta_sub<-as.data.frame(cbind(pt_meta_sub,group))
+
+pt_meta_select<-pt_meta_sub %>% dplyr::select(Group,Cancer_type_short,TIMELASER)
+
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+TIMEPalette<-brewer.pal(n = 5, name = 'Dark2')  #  "#1B9E77" "#D95F02" "#7570B3" "#E7298A" "#66A61E"
+
+ann_colors = list(
+  Cancer_type_short = c(HCC = "#7570B3", SLC = "darkgray", CHC = "#E7298A", ICC = "#66A61E", ASC = "#D95F02"),
+  Group = c(group1 = "#999999", group2 = "#E69F00", group3 = "#56B4E9", group4 = "#009E73", group5 = "#F0E442", group6 = "#0072B2", group7 = "#D55E00", group8 = "#CC79A7"),
+  TIMELASER = c(`TIME-IA`="#1B9E77", `TIME-IE`=  "#D95F02", `TIME-IR` = "#7570B3", `TIME-ISM` = "#E7298A" , `TIME-ISS` = "#66A61E")
+)
+
+
+ComplexHeatmap::pheatmap(gamma_data_sub,annotation_row =pt_meta_select,cutree_rows = 5,annotation_colors = ann_colors)
+
+```
+
+
+## survival analysis
+
+* our subgroups
+
+```{r}
+table(pt_meta_sub$Group)
+clinical_data_merge_sub$OS_state..Yes.0.<-ifelse(clinical_data_merge_sub$OS_state..Yes.0.>0, 0, 1)
+clinical_data_merge_sub$Relapse_state..Yes.0.<-ifelse(clinical_data_merge_sub$Relapse_state..Yes.0.>0, 0, 1)
+
+os <- Surv(clinical_data_merge_sub$OS_time, clinical_data_merge_sub$OS_state..Yes.0.)
+ggsurvplot(survfit(os~Group,data = pt_meta_sub),pval = TRUE,palette = cbPalette)+ylab("Overall Survival Probability")+xlab("Month")
+
+
+pfs<-Surv(clinical_data_merge_sub$FPS_time, clinical_data_merge_sub$Relapse_state..Yes.0.)
+ggsurvplot(survfit(pfs ~ Group, data = pt_meta_sub),pval=TRUE,palette = cbPalette)+ylab("Progression Free Probability")+xlab("Month")
+```
+
+* TIMELASER
+
+```{r}
+ggsurvplot(survfit(os ~ TIMELASER,data = pt_meta_sub),pval = TRUE,palette = TIMEPalette)+ylab("Overall Survival Probability")+xlab("Month")
+
+ggsurvplot(survfit(pfs ~ TIMELASER, data = pt_meta_sub),pval=TRUE,palette = TIMEPalette)+ylab("Progression Free Probability")+xlab("Month")
+```
+
+## Univariate cox regression
+
+* Overall Survival
+
+```{r}
+## topic 1
+os.cox <- coxph(os ~ topic1, data = clinical_data_merge_sub)
+summary(os.cox)
+
+## topic 2
+os.cox <- coxph(os ~ topic2, data = clinical_data_merge_sub)
+summary(os.cox)
+
+## topic 3
+os.cox <- coxph(os ~ topic3, data = clinical_data_merge_sub)
+summary(os.cox)
+
+## topic 4
+os.cox <- coxph(os ~ topic4, data = clinical_data_merge_sub)
+summary(os.cox)
+
+## topic 4
+os.cox <- coxph(os ~ topic5, data = clinical_data_merge_sub)
+summary(os.cox)
+```
+
+* Progression-free Survival
+
+
+```{r}
+## topic 1
+pfs.cox <- coxph(pfs ~ topic1, data = clinical_data_merge_sub)
+summary(pfs.cox)
+
+## topic 2
+pfs.cox <- coxph(pfs ~ topic2, data = clinical_data_merge_sub)
+summary(pfs.cox)
+
+## topic 3
+pfs.cox <- coxph(pfs ~ topic3, data = clinical_data_merge_sub)
+summary(pfs.cox)
+
+## topic 4
+pfs.cox <- coxph(pfs ~ topic4, data = clinical_data_merge_sub)
+summary(pfs.cox)
+
+## topic 5
+pfs.cox <- coxph(pfs ~ topic5, data = clinical_data_merge_sub)
+summary(pfs.cox)
+```
