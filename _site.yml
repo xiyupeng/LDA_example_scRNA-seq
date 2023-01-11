@@ -2,7 +2,11 @@ name: "example"
 output_dir: "docs"
 navbar:
   title: "Topic Model in single-cell analysis"
-
+  left:
+    - text: "liver cancer data"
+      href: liver_cancer.html
+    - text: "Melanoma flow data"
+      href: melanoma.html
 output:
   html_document:
     theme: cosmo
