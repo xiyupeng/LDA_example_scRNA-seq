@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Xiyu Peng" />
+
+
+<title>Exploring the heterogeneity in liver cancer scRNA-seq data with LDA</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Topic Model in single-cell analysis</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="liver_cancer.html">liver cancer data</a>
+</li>
+<li>
+  <a href="melanoma.html">Melanoma flow data</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Exploring the heterogeneity in liver cancer scRNA-seq data with LDA</h1>
+<h4 class="author">Xiyu Peng</h4>
+<h4 class="date">Jan 2023</h4>
+
+</div>
+
+
+<p>Here we walk through the pipeline of the latent Dirichlet Allocation (LDA) model, showing an example of its application on a scRNA-seq dataset from liver cancer patients. This dataset is obtained from a recent published nature paper. (<a href="https://www.nature.com/articles/s41586-022-05400-x" class="uri">https://www.nature.com/articles/s41586-022-05400-x</a>). All data used in the analysis can be found in the supplementary data files of the original paper or in the data portal (<a href="http://zhangninglab.com:3838/scPLC/" class="uri">http://zhangninglab.com:3838/scPLC/</a>).</p>
+<div id="starting-point" class="section level1">
+<h1>Starting point</h1>
+<p>In text mining, LDA requires the input as a count matrix, where each row represent each document,each column represent each term, each entry in the matrix is the number of occurrences of each term (a word is a single occurrence of a term). Motivated by the similarities between text data mining and single-cell analysis, for single-cell analysis, LDA consider:</p>
+<ul>
+<li><p><strong>cells as words,</strong></p></li>
+<li><p><strong>cell types as terms,</strong></p></li>
+<li><p><strong>patient samples as document,</strong></p></li>
+<li><p><strong>biological processes as topics.</strong></p></li>
+</ul>
+<p>Before applying the LDA model, we also need to prepare the cell type count matrix as the input of LDA. One common approach to get the cell type count matrix is to pool all cells together and do the clustering, if there is no batch effect.</p>
+<p>In this workflow, we use the published dataset to illustrate. We just download and use the cell type count matrix from the paper. All cell types have been well-annotated in the original paper.</p>
+</div>
+<div id="getting-ready" class="section level1">
+<h1>Getting ready</h1>
+<p>Firstly, we have to install core R packages required for LDA analysis. We use the R package <em>topicmodels</em> for model inference, R package <em>slam</em> for preparing the input data, R package <em>tidytext</em> for extracting the output data.</p>
+<pre class="r"><code>library(topicmodels)
+library(slam)
+library(tidytext)</code></pre>
+<p>In this workflow, we use some R packages for data visualization and analysis. But these R packages are not necesseray, you can use other similar R packages instead.</p>
+<pre class="r"><code>library(tidyverse)
+library(corrplot)
+library(ComplexHeatmap)
+library(ggpubr)
+library(survminer)
+library(survival)
+library(RColorBrewer)</code></pre>
+<p>Then we read the cell type count matrix, which was download from the data portal (<a href="http://zhangninglab.com:3838/scPLC/" class="uri">http://zhangninglab.com:3838/scPLC/</a>). We include 130 tumor tissue samples from 119 patients. Several patients have multiple tumor tissue samples.</p>
+<pre class="r"><code>metadata.sel.count_tumor_tissue &lt;- read.csv(&quot;https://raw.githubusercontent.com/xiyupeng/LDA_examples/main/data/metadata-sel-count_tumor_tissue.csv&quot;,row.names = 1)
+
+## exclude clusters that were removed in the paper due to low frequency or low quality
+removed_clusters&lt;-c(&quot;CD4T_01_CCR7&quot;, &quot;CD4T_09_FOXP3&quot;, &quot;CD8T_01_CCR7&quot;, &quot;CD8T_02_CX3CR1&quot;, 
+&quot;CD8T_03_GZMK_S1PR1&quot;, &quot;gdT_01_GNLY_S1PR5&quot;, &quot;NK_01_FCGR3A_CX3CR1&quot;, 
+&quot;MonoDC&quot;, &quot;Mo_01_CD14&quot;, &quot;Mo_02_CD16&quot;, &quot;Neu_02_S100A12&quot;, &quot;Neu_03_ISG15&quot;, &quot;Neu_04_TXNIP&quot;)
+
+data_matrix&lt;- metadata.sel.count_tumor_tissue %&gt;% dplyr::select(!removed_clusters)</code></pre>
+<p>The final input data for LDA has 130 samples with 76 features (clusters)</p>
+<pre class="r"><code>dim(data_matrix)</code></pre>
+<pre><code>## [1] 130  76</code></pre>
+</div>
+<div id="model-inference" class="section level1">
+<h1>Model inference</h1>
+<pre class="r"><code>count_matrix_triplet &lt;- as.simple_triplet_matrix(as.matrix(data_matrix))
+
+lda&lt;-LDA(count_matrix_triplet, control = list(seed = 2021, burnin = 1000,thin = 100, iter = 1000), k =5, method = &quot;Gibbs&quot;)
+
+save(lda, file = &quot;~/flow_cytometry/manuscript/liver cancer data/LDA_K5_filtered.Rdata&quot;)</code></pre>
+<p>It may take several minutes with the Gibbs Sampling. We can save the result at this moment for further analysis</p>
+<pre class="r"><code># load the data
+load(file = &quot;~/flow_cytometry/manuscript/liver cancer data/LDA_K5_filtered.Rdata&quot;)
+ntopics = 5
+
+## output of the LDA model
+para&lt;-posterior(lda)
+colnames(para$topic)&lt;-paste0(&quot;topic&quot;,colnames(para$topic))
+rownames(para$terms)&lt;-paste0(&quot;topic&quot;,rownames(para$terms))</code></pre>
+<p>The main output of the LDA model contains two matrix:</p>
+<ol style="list-style-type: decimal">
+<li>Topic content matrix (cell type-by-topic matrix) represents topics as different discrete distributions over cell types</li>
+</ol>
+<pre class="r"><code>## show first five columns
+head(round(para$terms[,1:5],5))</code></pre>
+<pre><code>##        B_01_MS4A1 B_02_MS4A1_CD83 B_03_MZB1 B_04_STMN1 CD4T_02_SELL
+## topic1    0.00000         0.00129   0.00172    0.00000      0.00000
+## topic2    0.00000         0.00000   0.00004    0.00015      0.00000
+## topic3    0.00000         0.04874   0.00206    0.00022      0.02038
+## topic4    0.00095         0.03500   0.09263    0.00741      0.00020
+## topic5    0.02532         0.00000   0.00015    0.00000      0.00000</code></pre>
+<p>Or you can find clusters with top weight for each topic.</p>
+<pre class="r"><code>terms(lda,5)</code></pre>
+<pre><code>##      Topic 1          Topic 2        Topic 3           Topic 4              
+## [1,] &quot;Mph_07_SLC40A1&quot; &quot;Mph_04_TREM2&quot; &quot;CD4T_03_GPR183&quot;  &quot;CD8T_10_PDCD1&quot;      
+## [2,] &quot;EC_05_KDR&quot;      &quot;Mph_05_IL1B&quot;  &quot;CD8T_06_CD69&quot;    &quot;CD8T_09_PDCD1_IFNG&quot; 
+## [3,] &quot;CD8T_08_GZMK&quot;   &quot;Mph_03_SPP1&quot;  &quot;CD4T_05_CD69&quot;    &quot;CD4T_07_CXCL13&quot;     
+## [4,] &quot;EC_06_KDR_ESM1&quot; &quot;Mph_02_CCL20&quot; &quot;CD8T_11_SLC4A10&quot; &quot;CD4T_10_FOXP3_CTLA4&quot;
+## [5,] &quot;NK_05_CD160&quot;    &quot;Mph_08_APOE&quot;  &quot;B_02_MS4A1_CD83&quot; &quot;B_03_MZB1&quot;          
+##      Topic 5        
+## [1,] &quot;CD4T_04_BAG3&quot; 
+## [2,] &quot;CD4T_06_PLCG2&quot;
+## [3,] &quot;Mph_04_TREM2&quot; 
+## [4,] &quot;Fb_01_FAP&quot;    
+## [5,] &quot;CD8T_07_PLCG2&quot;</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Topic prevalence matrix (topic-by-sample matrix) displays topic proportions estimated per sample</li>
+</ol>
+<pre class="r"><code>## show first five rows
+head(round(para$topics,3))</code></pre>
+<pre><code>##              1     2     3     4     5
+## A002_ICC 0.030 0.052 0.663 0.023 0.232
+## A003_ICC 0.007 0.204 0.210 0.018 0.562
+## A004_ICC 0.013 0.095 0.763 0.003 0.127
+## A005_ICC 0.007 0.605 0.065 0.012 0.311
+## A006_ICC 0.118 0.029 0.478 0.026 0.350
+## A007_ASC 0.006 0.126 0.093 0.058 0.717</code></pre>
+<p>The topic prevalence matrix is merged with the original data frame for further analysis. But before we investigating the distribution of topics, we need to exam the content of each topic by selecting representative cell types</p>
+<pre class="r"><code>metadata.sel.count_tumor_tissue&lt;-as.data.frame(cbind(metadata.sel.count_tumor_tissue,para$topic))
+metadata.sel.count_tumor_tissue$pt&lt;-gsub(&quot;_.*&quot;,&quot;&quot;,rownames(metadata.sel.count_tumor_tissue))</code></pre>
+</div>
+<div id="representative-cell-types" class="section level1">
+<h1>Representative cell types</h1>
+</div>
+<div id="association-to-meta-data" class="section level1">
+<h1>Association to meta data</h1>
+<p>After we identified the major five topics, we want to exam the prevalence of the topics and correlate to clinical outcomes.</p>
+<p>Same as the paper, we only focus on tumor tissue samples from primary liver cancer patients with the three major histological subtypes (HCC, ICC, and CHC) in order to identify TIME (tumour immune microenvironment) subtypes.</p>
+<p>The first step is to prepare the meta data file, combining clinical data and assigned TIME subtypes as a single data frame. We have prepared the data frame and we just uploaded the pre-cleaned data. The original data files are the supplementary data files in the original paper.</p>
+<p>Check column names of the 30 columns.</p>
+<pre class="r"><code>load(file = &quot;~/flow_cytometry/manuscript/liver cancer data/clinical_data.Rdata&quot;)
+dim(clinical_data_merge)</code></pre>
+<pre><code>## [1] 111  30</code></pre>
+<pre class="r"><code>colnames(clinical_data_merge)</code></pre>
+<pre><code>##  [1] &quot;Patient&quot;               &quot;Gender&quot;                &quot;Age..years.&quot;          
+##  [4] &quot;Cancer_type&quot;           &quot;Cancer_type_short&quot;     &quot;Primary_site_of_SLC&quot;  
+##  [7] &quot;Samples.for.scRNA.seq&quot; &quot;No._PB_samples&quot;        &quot;No._AL_samples&quot;       
+## [10] &quot;No._tumor_samples&quot;     &quot;Differentiation&quot;       &quot;Venous_invasion&quot;      
+## [13] &quot;T&quot;                     &quot;N&quot;                     &quot;M&quot;                    
+## [16] &quot;TNM_stage&quot;             &quot;BCLC_stage&quot;            &quot;Cirrhosis&quot;            
+## [19] &quot;Virus&quot;                 &quot;Relapse_state..Yes.0.&quot; &quot;FPS_time&quot;             
+## [22] &quot;OS_state..Yes.0.&quot;      &quot;OS_time&quot;               &quot;CM1&quot;                  
+## [25] &quot;CM2&quot;                   &quot;CM3&quot;                   &quot;CM4&quot;                  
+## [28] &quot;CM5&quot;                   &quot;TIMELASER&quot;             &quot;CancerType&quot;</code></pre>
+<p>We merge the clinical data <code>clinical_data_merge</code> with the scRNA-seq data matrix <code>metadata.sel.count_tumor_tissue</code>. For patient with multiple samples, only the first sample of the patient in the data matrix <code>metadata.sel.count_tumor_tissue</code> will be kept.</p>
+<pre class="r"><code>data_merge&lt;-merge(clinical_data_merge,metadata.sel.count_tumor_tissue,by.x = &quot;Patient&quot;,by.y = &quot;pt&quot;)</code></pre>
+<p>A heatmap can help to visualize the distribution of topics.</p>
+<pre class="r"><code>## prepare data for the heatmap
+pt_meta  &lt;- data_merge %&gt;%  select(Patient,Cancer_type_short,Differentiation,&quot;Relapse_state..Yes.0.&quot;, &quot;FPS_time&quot;,&quot;OS_state..Yes.0.&quot;,&quot;OS_time&quot;, TIMELASER)
+gamma_data&lt;-data_merge %&gt;% select(starts_with(&quot;topic&quot;))
+
+## pre-identify patient subgroups with hierarchical clustering
+rows.tree&lt;-hclust(dist(gamma_data))
+group&lt;-as.data.frame(cutree(rows.tree,5))
+colnames(group)&lt;-&quot;Group&quot;
+group$Group&lt;-paste0(&quot;group&quot;,group$Group)
+
+## select columns to be shown in the heatmap
+pt_meta&lt;-as.data.frame(cbind(pt_meta,group))
+pt_meta_select&lt;-pt_meta %&gt;% dplyr::select(Group,Cancer_type_short,TIMELASER)
+
+## Add color
+ann_colors = list(
+  Cancer_type_short = c(HCC = &quot;#7570B3&quot;, CHC = &quot;#E7298A&quot;, ICC = &quot;#66A61E&quot;),
+  Group = c(group1 = &quot;#999999&quot;, group2 = &quot;#E69F00&quot;, group3 = &quot;#56B4E9&quot;, group4 = &quot;#009E73&quot;, group5 = &quot;#F0E442&quot;),
+  TIMELASER = c(`TIME-IA`=&quot;#1B9E77&quot;, `TIME-IE`=  &quot;#D95F02&quot;, `TIME-IR` = &quot;#7570B3&quot;, `TIME-ISM` = &quot;#E7298A&quot; , `TIME-ISS` = &quot;#66A61E&quot;)
+)
+
+## heatmap
+ComplexHeatmap::pheatmap(gamma_data,annotation_row =pt_meta_select,cutree_rows = 5,annotation_colors = ann_colors)</code></pre>
+<p><img src="liver_cancer_files/figure-html/unnamed-chunk-14-1.png" width="1152" /></p>
+</div>
+<div id="survival-analysis" class="section level1">
+<h1>Survival Analysis</h1>
+<p>Kaplan-Meier analysis of OS and PFS stratified by five patient subgroups.</p>
+<pre class="r"><code>data_merge$OS_state..Yes.0.&lt;-ifelse(data_merge$OS_state..Yes.0.&gt;0, 0, 1)
+data_merge$Relapse_state..Yes.0.&lt;-ifelse(data_merge$Relapse_state..Yes.0.&gt;0, 0, 1)
+
+cbPalette &lt;- c(&quot;#999999&quot;, &quot;#E69F00&quot;, &quot;#56B4E9&quot;, &quot;#009E73&quot;, &quot;#F0E442&quot;, &quot;#0072B2&quot;, &quot;#D55E00&quot;, &quot;#CC79A7&quot;)
+my.labs = levels(as.factor(pt_meta$Group))
+
+os &lt;- Surv(data_merge$OS_time, data_merge$OS_state..Yes.0.)
+ggsurvplot(survfit(os~Group,data = pt_meta),pval = TRUE,palette = cbPalette,censor.shape=&quot;|&quot;, censor.size=4,legend.labs=my.labs)+ylab(&quot;Overall Survival Probability&quot;)+xlab(&quot;Time(mos)&quot;)</code></pre>
+<p><img src="liver_cancer_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<pre class="r"><code>pfs&lt;-Surv(data_merge$FPS_time, data_merge$Relapse_state..Yes.0.)
+ggsurvplot(survfit(pfs ~ Group, data = pt_meta),pval=TRUE,palette = cbPalette,censor.shape=&quot;|&quot;, censor.size=4,  legend.labs=my.labs)+ylab(&quot;Progression Free Probability&quot;)+xlab(&quot;Time(mos)&quot;)</code></pre>
+<p><img src="liver_cancer_files/figure-html/unnamed-chunk-15-2.png" width="672" /></p>
+<p>Kaplan-Meier analysis of OS and PFS stratified by five TIME subtypes.</p>
+<pre class="r"><code>TIMEPalette&lt;-brewer.pal(n = 5, name = &#39;Dark2&#39;)
+my.labs = levels(as.factor(pt_meta$TIMELASER))
+
+ggsurvplot(survfit(os ~ TIMELASER,data = pt_meta),pval = TRUE,palette = TIMEPalette,censor.shape=&quot;|&quot;, censor.size=4,  legend.labs=my.labs)+ylab(&quot;Overall Survival Probability&quot;)+xlab(&quot;Time(mos)&quot;)</code></pre>
+<p><img src="liver_cancer_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<pre class="r"><code>ggsurvplot(survfit(pfs ~ TIMELASER, data = pt_meta),pval=TRUE,palette = TIMEPalette,censor.shape=&quot;|&quot;, censor.size=4,  legend.labs=my.labs)+ylab(&quot;Progression Free Probability&quot;)+xlab(&quot;Time(mos)&quot;)</code></pre>
+<p><img src="liver_cancer_files/figure-html/unnamed-chunk-16-2.png" width="672" /></p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

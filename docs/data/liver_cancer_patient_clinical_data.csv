@@ -1,0 +1,130 @@
+Supplementary table 1. Clinical information of patients and library information of samples,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Supplementary table 1a. Clinical information of 124 patients ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Patient,Gender,Age (years),Cancer_type,Cancer_type_short,Primary_site_of_SLC,Samples for scRNA-seq,No._PB_samples,No._AL_samples,No._tumor_samples,"Tumor_size
+(cm)",Differentiation,Venous_invasion,T,N,M,TNM_stage,BCLC_stage,Cirrhosis,"AFP 
+(?g/L)",AFP_status,CA199 (U/ml),CA199_status,"CEA
+(?g/L)",CEA_status,Virus,Relapse_state (Yes=0),FPS_time,OS_state (Yes=0),OS_time
+A001,M,67,Intrahepatic cholangiocarcinoma,ICC,\,A001_ICC,0,0,1,11*6.5*5.2,Moderate,0,4,1,0,IVA,C,0,327.7,1,>1000,1,86.5,1,HBV,0,0.9,0,1
+A002,M,61,Intrahepatic cholangiocarcinoma,ICC,\,A002_ICC,0,0,1,2.6*2.5*1.5,Low,0,1,0,0,I,A,0,7.11,1,66.9,1,5.63,1,NBNC,0,5.6,0,8.6
+A003,F,47,Intrahepatic cholangiocarcinoma,ICC,\,A003_ICC,0,0,1,3.3*2.2*2.1,Low,1,4,1,0,IVA,C,0,2.86,0,52.77,1,0.98,0,NBNC,0,26,0,26
+A004,F,49,Intrahepatic cholangiocarcinoma,ICC,\,"A004_ICC, A004_ICC_N",0,1,1,13.9*7,Low,0,1,0,0,I,B,0,6.05,0,36.25,0,2.49,0,NBNC,0,7.5,0,20.2
+A005,F,46,Intrahepatic cholangiocarcinoma,ICC,\,"A005_ICC, A005_ICC_N",0,1,1,1*2,Low,0,1,0,0,I,A,0,2.2,0,8,0,2.19,0,HBV,1,32.6,1,32.6
+A006,M,49,Intrahepatic cholangiocarcinoma,ICC,\,A006_ICC,0,0,1,3.7*3.1,Low,0,1,0,0,I,A,0,3.81,0,19.28,0,2.23,0,NBNC,0,9.1,0,9.4
+A007,M,53,Adenosquamous carcinoma,ASC,\,A007_ASC,0,0,1,6*4*4,Moderate-High,0,1,0,0,I,A,0,1.6,0,3.5,0,1.7,0,NBNC,1,31.8,1,31.8
+A008,M,64,Intrahepatic cholangiocarcinoma,ICC,\,A008_ICC,0,0,1,6*3*3,Low,0,1,0,0,I,B,0,1.26,0,9.89,0,0.78,0,NBNC,0,4.5,1,31.7
+A009,M,52,Intrahepatic cholangiocarcinoma,ICC,\,A009_ICC,0,0,1,7*6.2*3.5,Low,0,1,0,0,I,B,0,10.9,1,16.93,0,2.06,0,NBNC,0,8.2,1,31.3
+A010,M,56,Intrahepatic cholangiocarcinoma,ICC,\,A010_ICC,0,0,1,5*3.4*2.5,Moderate,0,1,0,0,I,B,0,4.61,0,66.32,1,3.03,0,HBV,1,30.9,1,30.9
+A011,M,69,Hepatocellular carcinoma,HCC,\,A011_HCC,0,0,1,2.7*2.1*2,High,0,1,0,0,I,A,0,1.98,0,6.21,0,1.57,0,HBV,0,22.6,1,30.4
+A012,F,77,Intrahepatic cholangiocarcinoma,ICC,\,"A012_ICC, A012_ICC_IM1, A012_ICC_IM2",0,0,3,12*10*4,Low-Moderate,1,4,1,0,IVA,C,0,2.3,0,110.1,1,15.25,1,NBNC,0,2.9,0,3.2
+A013,M,60,Hepatocellular carcinoma,HCC,\,"A013_HCC, A013_HCC_N",0,1,1,3*2.5*2.4,Moderate,0,1,0,0,I,A,0,103.4,1,33.61,0,3.07,0,HBV,1,30.3,1,30.3
+A014,M,47,Hepatocellular carcinoma,HCC,\,A014_HCC,0,0,1,3*2.8*2.5,Moderate,0,1,0,0,I,A,1,5.91,0,8.39,0,1.65,0,NBNC,0,18.7,1,30.8
+A015,M,63,Combined hepatocellular and cholangiocarcinoma,CHC,\,A015_CHC,0,0,1,3*3*2.5,Low-Moderate,1,4,1,1,IVB,C,0,4.35,0,14.79,0,1.43,0,HBV,0,24.2,1,30.4
+A016,F,82,Hepatocellular carcinoma,HCC,\,A016_HCC,0,0,1,3*2.5,Moderate,0,1,0,0,I,A,0,3.3,0,10.11,0,1.1,0,HBV,1,30.2,1,30.2
+A017,M,64,Hepatocellular carcinoma,HCC,\,A017_HCC,0,0,1,4*4*3.5,Moderate,0,1,0,0,I,A,1,12.49,1,51.76,1,4.81,1,HBV,0,17,1,30.2
+A018,F,41,Hepatocellular carcinoma,HCC,\,A018_HCC,0,0,1,2,Low,0,2,0,0,II,A,1,1210,1,38.44,0,1.09,0,HBV,1,30.1,1,30.1
+A019,M,45,Hepatic hemangioma,HH,\,A019_HH,0,0,1,NA,NA,0,NA,NA,NA,NA,NA,0,NA,NA,NA,NA,NA,NA,NBNC,NA,NA,NA,NA
+A020,M,70,Intrahepatic cholangiocarcinoma,ICC,\,A020_ICC,0,0,1,10*8,Low,0,1,0,0,I,B,0,1.48,0,12.55,0,6.14,1,NBNC,0,16,0,17.6
+A021,F,67,Intrahepatic cholangiocarcinoma,ICC,\,A021_ICC,0,0,1,1*1,Low,0,1,1,1,IVB,D,0,3.11,0,8.29,0,3.39,0,NBNC,0,6.8,1,30.1
+A022,M,48,Intrahepatic cholangiocarcinoma,ICC,\,A022_ICC,0,0,1,4*3.8*3,Low-Moderate,0,1,0,0,I,A,0,53.92,1,36.64,0,3.41,0,HBV,1,30,1,30
+A023,M,56,Secondary liver cancer,SLC,Gastric cancer,A023_GAS_M,0,0,1,7.6*7.7,Low,0,1,1,1,IVB,NA,0,4.89,0,9.63,0,1.25,0,NBNC,0,22.1,1,29.9
+A024,M,51,Hepatocellular carcinoma,HCC,\,A024_HCC,0,0,1,NA,Moderate,0,1,0,0,I,A,0,46.59,1,28.77,0,2.22,0,HBV,1,29.9,1,29.9
+A025,M,60,Secondary liver cancer,SLC,Breast cancer,A025_BRC_M,0,0,1,6.5*3,NA,0,1,1,1,IVB,NA,0,3.78,0,18.13,0,0.95,0,NBNC,0,24.2,1,29.8
+A026,M,62,Hepatocellular carcinoma,HCC,\,A026_HCC,0,0,1,1.5*1,Moderate,0,1,0,0,I,A,0,185.2,1,11.01,0,2.6,0,HCV,1,29.5,1,29.5
+A027,M,49,Hepatocellular carcinoma,HCC,\,A027_HCC,0,0,1,5.5*4.5,Moderate,0,1,0,0,I,B,1,34.88,1,134.2,1,3,0,HBV,0,17.1,0,19.1
+A028,M,52,Hepatocellular carcinoma,HCC,\,A028_HCC,0,0,1,3.5*2.5,Moderate,0,1,0,0,I,A,0,>1210,1,3.7,0,1.6,0,NBNC,0,17.4,0,18.5
+A029,F,56,Hepatocellular carcinoma,HCC,\,A029_HCC,0,0,1,6.5*5.8*5.5,Low-Moderate,0,1,0,0,I,B,1,1210,1,13.78,0,2.06,0,NBNC,0,23.5,0,23.5
+A030,F,31,Hepatocellular carcinoma,HCC,\,A030_HCC,0,0,1,1.2*0.8,Moderate,0,1,0,0,I,A,0,15.21,1,6.23,0,0.77,0,HBV,1,29.2,1,29.2
+A031,M,62,Hepatocellular carcinoma,HCC,\,A031_HCC,0,0,1,3.3*3.5,High,0,1,0,0,I,A,1,3.51,0,28.62,0,1.3,0,HBV,1,29,1,29
+A032,M,88,Secondary liver cancer,SLC,Pancreatic cancer,"A032_PAN, A032_PAN_M",0,0,2,4*3.5*3.5,Low-Moderate,0,1,1,1,IVB,NA,0,2.04,0,3.2,0,54.09,1,NBNC,0,1.7,0,1.7
+A033,M,68,Hepatocellular carcinoma,HCC,\,A033_HCC,0,0,1,4*3,Moderate-High,0,1,0,0,I,A,1,3.85,0,15.94,0,2.22,0,HBV,1,29,1,29
+A034,M,67,Hepatocellular carcinoma,HCC,\,A034_HCC,0,0,1,3.5,Moderate-High,0,1,0,0,I,A,0,2.07,0,21.45,0,4.06,0,NBNC,0,8.2,1,29
+A035,M,49,Hepatocellular carcinoma,HCC,\,A035_HCC,0,0,1,2.7*2,High,0,1,0,0,I,A,1,4.93,0,53.32,1,2.71,0,NBNC,1,28.6,1,28.6
+A036,F,52,Secondary liver cancer,SLC,Colorectal cancer,A036_CRC_M,0,0,1,5.5*4*3,Moderate,0,1,0,0,I,B,0,2.22,0,11.74,0,5.18,1,NBNC,1,28.3,1,28.3
+A037,M,71,Hepatocellular carcinoma,HCC,\,A037_HCC,0,0,1,10.5*10*10,Low-Moderate,1,4,1,0,IVA,C,0,>1210,0,26.95,0,2.53,0,NBNC,1,27.4,1,27.4
+A038,F,73,Combined hepatocellular and cholangiocarcinoma,CHC,\,"A038_CHC, A038_CHC_IM1, A038_CHC_IM2",0,0,3,10*8*7,Low,1,4,1,1,IVA,C,0,2.57,0,50.94,1,5.56,1,NBNC,0,9.7,0,18.4
+A039,M,47,Hepatocellular carcinoma,HCC,\,A039_HCC,0,0,1,4*3*3,Low-Moderate,0,1,0,0,I,A,0,2.79,0,10.45,0,0.71,0,NBNC,0,8.3,1,28.1
+A040,F,47,Hepatic hemangioma,HH,\,A040_HH,0,0,1,1.7*1.6,NA,0,NA,NA,NA,NA,NA,0,3.41,0,7.74,0,1.19,0,NBNC,1,28.1,1,28.1
+A041,M,67,Secondary liver cancer,SLC,Colorectal cancer,A041_CRC_M,0,0,1,6.3*5.7,Moderate,1,4,1,1,IVB,NA,0,6.43,0,71.18,1,89.22,1,NBNC,NA,NA,NA,NA
+A042,F,46,Secondary liver cancer,SLC,Breast cancer,A042_BRC_M,0,0,1,4*3*1.5,NA,0,1,1,1,IVB,NA,0,3.86,0,CA153-212.3,0,15.42,1,NBNC,0,10.5,1,16.1
+A043,M,63,Hepatocellular carcinoma,HCC,\,A043_HCC,0,0,1,7*5.5*5,Moderate,0,1,0,0,I,B,0,5.48,0,8.48,0,3.22,0,NBNC,1,27.9,1,27.9
+A044,M,53,Hepatocellular carcinoma,HCC,,A044_HCC,0,0,1,3.5*3*3,High,0,1,0,0,I,A,0,0.99,0,7.9,0,1.19,0,NBNC,1,27.7,1,27.7
+A045,M,67,Secondary liver cancer,SLC,Colorectal cancer,A045_CRC_M,0,0,1,3.7*3.2,Moderate,0,1,1,1,IVB,NA,0,3.32,0,0.6,0,8.32,1,NBNC,NA,NA,NA,NA
+A046,F,36,Hepatocellular carcinoma,HCC,\,A046_HCC,0,0,1,6*6*4,Moderate,0,1,0,0,I,B,0,643.9,1,8.2,0,0.49,0,HBV,1,27.4,1,27.4
+A047,M,41,Hepatocellular carcinoma,HCC,\,A047_HCC,0,0,1,6*4*2,Moderate,0,3,0,0,IIIA,B,0,35.34,1,9.69,0,2,0,HBV,0,15.5,0,15.5
+A048,F,44,Intrahepatic cholangiocarcinoma,ICC,\,"A048_ICC, A048_ICC_IM1, A048_ICC_IM2, A048_ICC_IM3, A048_ICC_IM4",0,0,5,"0.2,12",Low,1,4,1,1,IVB,C,0,3.78,0,134.2,1,0.15,0,NBNC,0,4.4,0,5.9
+A049,M,63,Hepatocellular carcinoma,HCC,\,A049_HCC,0,0,1,6*4,Low-Moderate,0,1,0,0,I,B,1,1210,1,65.74,1,5.01,1,HBV,1,27.3,1,27.3
+A050,M,79,Hepatocellular carcinoma,HCC,\,A050_HCC,0,0,1,5*4,High,0,1,0,0,I,B,0,2.25,0,9.21,0,1.37,0,NBNC,1,27.2,1,27.2
+A051,M,48,Hepatocellular carcinoma,HCC,\,A051_HCC,0,0,1,14*12*8,Moderate,1,4,1,0,IVA,B,1,1210,1,33.21,0,0.85,0,HBV,0,4,0,9.2
+A052,F,62,Combined hepatocellular and cholangiocarcinoma,CHC,\,A052_CHC,0,0,1,5*4*3.5,Low-Moderate,0,1,0,1,I,C,0,110.2,1,14.66,0,3.13,0,HCV,1,27.1,1,27.1
+A053,M,58,Secondary liver cancer,SLC,Lymphoma,A053_LYM_M,0,0,1,1.9*1.7,NA,0,1,1,1,IVB,NA,1,1.06,0,12.41,0,3.38,0,NBNC,0,14.6,0,22.4
+A054,M,53,Hepatocellular carcinoma,HCC,\,A054_HCC,0,0,1,4*4*3,Moderate-High,0,1,0,0,I,A,1,23.07,1,18.62,0,1.88,0,HCV,0,12.7,1,26.6
+A055,M,57,Hepatocellular carcinoma,HCC,\,A055_HCC,0,0,1,3*2.5*2,Moderate,0,1,0,0,I,A,1,6.23,0,12.33,0,1.08,0,HBV,1,26.6,1,26.6
+A056,M,49,Hepatocellular carcinoma,HCC,\,A056_HCC,0,0,1,8*8,Low-Moderate,1,4,1,0,IVA,C,0,430.9,1,97.59,1,1.54,0,HBV,0,3.7,0,3.7
+A057,M,45,Hepatocellular carcinoma,HCC,\,A057_HCC,0,0,1,2*2*1.5,High,0,1,0,0,I,A,1,0.78,0,14.41,0,1.9,0,NBNC,1,26.3,1,26.3
+A058,F,40,Hepatocellular carcinoma,HCC,\,A058_HCC,0,0,1,6.7*5,High,0,1,0,0,I,B,1,70.34,1,15.97,0,1.34,0,NBNC,0,4,1,26.2
+A059,M,62,Hepatocellular carcinoma,HCC,\,A059_HCC,0,0,1,15*12*7,Moderate,1,4,1,0,IVA,C,1,391.4,1,29.07,0,2.14,0,HCV,0,12.3,1,26.2
+A060,M,49,Sarcomatoid  carcinoma,SAR,\,A060_SAR,0,0,1,10.8*8.5,Low,0,1,1,1,IVB,NA,0,43.61,1,32.93,0,2.28,0,NBNC,0,4.7,0,6.8
+A061,M,59,Hepatocellular carcinoma,HCC,\,A061_HCC,0,0,1,7.2*6,Moderate,0,1,0,0,I,B,0,1.69,0,8.2,0,1.84,0,HBV,0,12.9,0,25.2
+A062,M,64,Intrahepatic cholangiocarcinoma,ICC,\,A062_ICC,0,0,1,2*12,Low,1,4,1,0,IVA,C,0,4.75,0,69.98,1,3.55,0,NBNC,0,4.1,0,6.1
+A063,M,51,Hepatocellular carcinoma,HCC,\,A063_HCC,0,0,1,16*9.3,Moderate-High,0,1,0,0,I,B,0,1.24,0,8.05,0,0.58,0,HBV,0,5.7,0,6.7
+A064,F,52,Hepatocellular carcinoma,HCC,\,A064_HCC,0,0,1,2,Moderate,0,1,0,0,I,A,1,123,1,0.93,0,2.26,0,HBV,1,26.1,1,26.1
+A065,M,58,Hepatocellular carcinoma,HCC,\,A065_HCC,0,0,1,16*10*8,Moderate-High,1,4,1,0,IVA,C,0,6.66,0,38.1,0,3.65,0,HBV,0,7.3,0,17.4
+A066,M,59,Intrahepatic cholangiocarcinoma,ICC,\,A066_ICC,0,0,1,4.5*3.5*3.5,Moderate,0,1,0,0,I,B,0,6.36,0,10.62,0,1.95,0,NBNC,1,26,1,26
+A067,M,65,Combined hepatocellular and cholangiocarcinoma,CHC,\,A067_CHC,0,0,1,9*6.4,Low-Moderate,1,4,1,1,IVA,C,0,2.16,0,0.68,0,243.1,0,NBNC,0,2.7,0,2.7
+A068,M,71,Hepatocellular carcinoma,HCC,\,A068_HCC,0,0,1,7.5*5*4,High,0,1,0,0,I,B,0,2.4,0,6.01,0,2.8,0,NBNC,1,25.8,1,25.8
+A069,M,53,Hepatocellular carcinoma,HCC,\,A069_HCC,0,0,1,6.5,Moderate-High,0,1,0,0,I,B,0,4.01,0,5.31,0,2.17,0,HBV,0,22.2,1,25.8
+A070,M,51,Hepatocellular carcinoma,HCC,\,A070_HCC,0,0,1,1.5*1.5*1.2,High,0,1,0,0,I,A,1,8.59,1,25.18,0,4.26,0,HBV,0,13.6,1,25.7
+A071,M,55,Hepatocellular carcinoma,HCC,\,A071_HCC,0,0,1,9.5*6.5,Low-Moderate,0,2,0,0,II,B,0,485,1,9.17,0,0.89,0,HBV,1,25.4,1,25.4
+A072,F,36,Hepatocellular carcinoma,HCC,\,A072_HCC,0,0,1,6*4.5*4,Low,0,1,0,0,I,B,0,1.28,0,6.47,0,0.78,0,HBV,1,25.4,1,25.4
+A073,M,53,Combined hepatocellular and cholangiocarcinoma,CHC,\,A073_CHC,0,0,1,4*3*2.5,Low,0,1,0,1,I,A,1,3.83,0,14.93,0,2.39,0,NBNC,1,25.2,1,25.2
+A074,M,56,Hepatocellular carcinoma,HCC,\,"A074_HCC, A074_HCC_IM1",0,0,2,5.2*4.6,Low-Moderate,0,1,0,0,I,B,0,>1210,0,52.05,0,3.06,0,HBV,1,25.2,1,25.2
+A075,M,67,Intrahepatic cholangiocarcinoma,ICC,\,A075_ICC,0,0,1,3.7*3.7*3.5,Low-Moderate,0,1,0,0,I,A,0,4.93,0,2.02,0,32.41,0,NBNC,0,21.7,1,25
+A076,M,59,Hepatocellular carcinoma,HCC,\,A076_HCC,0,0,1,3.7*3.6,Low-Moderate,0,2,0,0,II,B,0,20.57,0,13.89,0,2.2,0,HBV,1,25.2,1,25.2
+A077,M,62,Combined hepatocellular and cholangiocarcinoma,CHC,\,A077_CHC,0,0,1,8*8*6,Low-Moderate,1,4,1,1,IVA,C,0,1210,1,152.4,1,5.52,1,NBNC,0,4.9,0,13.7
+A078,F,42,Intrahepatic cholangiocarcinoma,ICC,\,A078_ICC,0,0,1,6*6,Low-Moderate,1,4,1,0,IVA,C,0,1.77,1,290.4,1,62.99,1,NBNC,0,4.9,0,18.1
+A079,F,63,Hepatocellular carcinoma,HCC,\,A079_HCC,0,0,1,1.7*1.3,Low-Moderate,0,1,0,0,I,A,1,28.75,1,25.83,0,2.57,0,HBV,1,25.2,1,25.2
+A080,M,51,Hepatocellular carcinoma,HCC,\,A080_HCC,0,0,1,4.8*4.3,Low,0,1,0,0,I,A,0,NA,0,NA,0,NA,0,HBV,1,25.1,1,25.1
+A081,M,67,Intrahepatic cholangiocarcinoma,ICC,\,A081_ICC,0,0,1,4.1*3.4*3.1,Low,0,1,0,0,I,A,0,2.24,0,29.69,0,3.22,0,NBNC,0,7.7,0,17.5
+A082,F,55,Hepatocellular carcinoma,HCC,\,A082_HCC,0,0,1,2.8*2.4*3.2,Moderate,0,1,0,0,I,A,1,11.77,0,18.84,0,0.76,0,NBNC,0,7.6,0,20.7
+A083,F,53,Hepatocellular carcinoma,HCC,\,A083_HCC,0,0,1,2.7*2.8,Moderate,0,1,0,0,I,A,1,14.86,1,18.18,0,2.06,0,HBV,1,24.7,1,24.7
+A084,M,64,Combined hepatocellular and cholangiocarcinoma,CHC,\,A084_CHC,0,0,1,1.5*0.7,Low,0,1,0,1,I,A,0,3.14,0,13.41,0,1.84,0,NBNC,0,12.7,1,24.8
+A085,M,48,Hepatocellular carcinoma,HCC,\,A085_HCC,0,0,1,3.6*2.4,Low,0,1,0,0,I,A,1,1007,1,60.71,1,3.32,0,HBV,0,4.4,0,24.6
+A086,M,60,Hepatocellular carcinoma,HCC,\,A086_HCC,0,0,1,4*4*3,Moderate-High,0,1,0,0,I,A,0,1.97,0,22.64,0,4.89,0,NBNC,1,24.6,1,24.6
+A087,M,46,Hepatocellular carcinoma,HCC,\,A087_HCC,0,0,1,1.6*1,Low-Moderate,0,2,0,0,II,A,1,6.67,0,35.47,0,6.92,0,NBNC,1,24.6,1,24.6
+A088,M,55,Hepatocellular carcinoma,HCC,\,A088_HCC,0,0,1,6.5*6,Low-Moderate,0,1,0,0,I,C,1,NA,0,NA,0,NA,0,HCV,0,8.2,0,19.5
+A089,M,72,Hepatocellular carcinoma,HCC,\,A089_HCC,0,0,1,4.2*3.5,High,0,1,0,0,I,A,0,6.11,0,59.76,1,3.39,0,HCV,1,24.4,1,24.4
+A090,M,60,Hepatocellular carcinoma,HCC,\,A090_HCC,0,0,1,1.1*0.7*0.7,Low,1,4,1,0,IVA,C,1,182.7,1,37.77,0,4.39,0,HBV,0,6.9,0,21.4
+A091,M,64,Hepatocellular carcinoma,HCC,\,A091_HCC,0,0,1,2.7*2.2,Moderate,0,1,0,0,I,A,0,2.24,0,41.68,1,4.63,0,HBV,1,24.3,1,24.3
+A092,M,63,Secondary liver cancer,SLC,Colorectal cancer,A092_CRC_M,0,0,1,1.8*1.5*1.5,Low-Moderate,0,1,1,1,IVB,NA,0,3.07,0,93.26,1,47.57,1,NBNC,1,24.3,1,24.3
+A093,F,73,Intrahepatic cholangiocarcinoma,ICC,\,A093_ICC,0,0,1,4*3.2*2.5,Low,0,1,0,0,I,A,0,1.76,0,24.44,0,2.7,0,NBNC,1,24.1,1,24.1
+A094,M,43,Hepatocellular carcinoma,HCC,\,A094_HCC,0,0,1,5*5*4,Moderate,1,4,1,0,IVA,C,1,925.3,1,106.6,1,2.69,0,HBV,1,24.1,1,24.1
+A095,M,70,Hepatocellular carcinoma,HCC,\,A095_HCC,0,0,1,3.8*3.5*3.5,High,0,1,0,0,I,A,1,3.7,0,4.83,0,0.78,0,HBV,1,24.1,1,24.1
+A096,M,46,Hepatocellular carcinoma,HCC,\,A096_HCC,0,0,1,3.5*3.2*2.5,Moderate,0,1,0,0,I,A,1,252.4,1,6.31,0,0.86,0,NBNC,1,24.1,1,24.1
+A097,F,51,Hepatocellular carcinoma,HCC,\,A097_HCC,0,0,1,1.8,Moderate,0,1,0,0,I,A,1,325.4,1,8.96,0,1.51,0,HBV,0,3.6,1,24
+A098,F,68,Hepatocellular carcinoma,HCC,\,A098_HCC,0,0,1,4*4*3.5,Moderate,0,1,0,0,I,A,0,2.97,0,10.88,0,2.08,0,HBV,1,23.9,1,23.9
+A099,M,48,Hepatocellular carcinoma,HCC,\,A099_HCC,0,0,1,1*1,Moderate,0,1,0,0,I,B,0,214.1,1,8.11,0,1.49,0,HBV,1,23.9,1,23.9
+A100,M,64,Hepatocellular carcinoma,HCC,\,A100_HCC,0,0,1,4*3.5,Moderate,0,2,0,0,II,A,1,1.11,0,5.92,0,4.26,0,HBV,1,23.8,1,23.8
+A101,M,62,Hepatocellular carcinoma,HCC,\,A101_HCC,0,0,1,3.2*2.1*2,Moderate,0,1,0,0,I,A,1,50.65,1,18.71,0,10.22,1,NBNC,1,23.8,1,23.8
+A102,M,63,Hepatocellular carcinoma,HCC,\,A102_HCC,0,0,1,8*7*7,High,0,1,0,0,I,B,0,2.72,0,7.89,0,1.54,0,NBNC,1,23.7,1,23.7
+A103,M,67,Hepatocellular carcinoma,HCC,\,A103_HCC,0,0,1,8*6,High,0,1,0,0,I,B,0,4.79,0,7.17,0,1.69,0,HBV,0,7.1,0,20.8
+A104,M,56,Intrahepatic cholangiocarcinoma,ICC,\,A104_ICC,0,0,1,3.5*3*2.2,Low,0,1,0,0,I,A,0,0.98,0,10.57,0,2.69,0,HBV,0,3,0,16.5
+A105,M,43,Hepatocellular carcinoma,HCC,\,A105_HCC,0,0,1,0.6,High,0,1,0,0,I,A,0,2.95,0,13,0,2.95,0,HBV,0,11.6,1,23.6
+A106,M,60,Hepatocellular carcinoma,HCC,\,A106_HCC,0,0,1,1.5*1.5*1.2,Low-Moderate,1,4,1,0,IVA,C,1,665.3,1,22.41,0,4.8,1,NBNC,0,8.3,1,23.6
+A107,M,58,Hepatocellular carcinoma,HCC,\,A107_HCC,0,0,1,3.5*3,High,0,1,0,0,I,A,1,14.52,1,50.67,1,2.02,0,HBV,1,23.5,1,23.5
+A108,M,43,Hepatocellular carcinoma,HCC,\,A108_HCC,0,0,1,4*2.5,Moderate,1,4,1,0,IVA,C,1,8.18,1,11.74,0,2.07,0,HBV,0,16.6,0,17.9
+A109,M,58,Hepatocellular carcinoma,HCC,\,A109_HCC,0,0,1,1.3*0.9*0.4,Moderate,0,1,0,0,I,A,1,1.74,0,17.64,0,3.54,0,HBV,0,13.3,1,23.5
+A110,M,65,Hepatocellular carcinoma,HCC,\,A110_HCC,0,0,1,2.1*1.5*1.2,Moderate,1,4,1,0,IVA,C,1,90.34,1,73.72,1,3.5,0,NBNC,0,20.6,0,21.6
+A111,F,61,Intrahepatic cholangiocarcinoma,ICC,\,A111_ICC,0,0,1,6.2*6.1*5,Low,1,4,1,0,IVA,C,0,5.74,0,>1000,1,23.58,1,NBNC,0,1.1,0,1.4
+A112,F,64,Intrahepatic cholangiocarcinoma,ICC,\,A112_ICC,0,0,1,2.8*2.8*2.5,Low,0,1,0,0,I,A,0,1.32,0,26.82,0,2.75,0,NBNC,0,15.5,1,23.6
+A113,M,43,Hepatocellular carcinoma,HCC,\,A113_HCC,0,0,1,1.7*1.5*1,Low-Moderate,1,4,1,0,IVA,C,1,88.56,1,18.06,0,3.06,0,HBV,1,23.1,1,23.1
+A114,M,71,Hepatocellular carcinoma,HCC,\,"A114_HCC, A114_HCC_B, A114_HCC_N",1,1,1,2.4*3.7,Moderate,0,1,0,0,I,A,1,798,1,9.96,0,1.98,0,NBNC,1,13.6,1,13.6
+A115,M,50,Intrahepatic cholangiocarcinoma,ICC,\,"A115_ICC, A115_ICC_B, A115_ICC_N",1,1,1,5.5*4.3,Low-Moderate,0,1,0,0,I,B,0,1.55,0,19.49,0,5.03,1,NBNC,0,12.3,0,12.3
+A116,M,77,Hepatocellular carcinoma,HCC,\,"A116_HCC, A116_HCC_B, A116_HCC_N",1,1,1,4.5*4*3.5,High,0,1,0,0,I,A,1,2.89,0,10.45,0,2.44,0,HBV,1,13.6,1,13.6
+A117,M,41,Hepatocellular carcinoma,HCC,\,"A117_HCC, A117_HCC_N",0,1,1,3.8*2.5*1.8,Low,1,3,1,1,IV,C,1,11.51,1,8.76,0,1.01,0,HBV,1,13.6,1,13.6
+A118,M,68,Intrahepatic cholangiocarcinoma,ICC,\,"A118_ICC, A118_ICC_B, A118_ICC_N",1,1,1,7*9,Low-Moderate,0,1,0,0,I,B,1,7.91,1,148,1,2.75,0,HBV,1,13.6,1,13.6
+A119,M,62,Hepatocellular carcinoma,HCC,\,"A119_HCC, A119_HCC_B, A119_HCC_N, A119_HCC_IM1, A119_HCC_IM2",1,1,3,4.7*4.3,Low,1,3,1,1,IV,C,1,88.85,1,12.52,0,3.11,0,HBV,1,13.5,1,13.5
+A120,M,56,Hepatocellular carcinoma,HCC,\,"A120_HCC, A120_HCC_B, A120_HCC_N",1,1,1,10*9*9,Moderate-High,0,1,0,0,I,B,1,NA,NA,NA,NA,NA,NA,HBV,1,13.4,1,13.4
+A121,F,46,Hepatocellular carcinoma,HCC,\,"A121_HCC, A121_HCC_B, A121_HCC_N",1,1,1,2.4*2.3*2.2,High,0,1,0,0,I,A,0,7.67,1,28.45,0,2.8,0,NBNC,1,13.4,1,13.4
+A122,F,65,Hepatocellular carcinoma,HCC,\,"A122_HCC, A122_HCC_B, A122_HCC_N",1,1,1,1.5*3.5,Low,0,1,0,0,I,A,1,1210,1,60.95,1,3.97,0,HBV,1,13.4,1,13.4
+A123,M,58,Hepatocellular carcinoma,HCC,\,"A123_HCC, A123_HCC_B, A123_HCC_N",1,1,1,1.2*1.1,High,0,1,0,0,I,A,0,2.85,0,22.35,0,2.57,0,NBNC,0,13.3,1,13.3
+A124,M,52,Hepatocellular carcinoma,HCC,\,"A124_HCC, A124_HCC_B, A124_HCC_N",1,1,1,4.5*4*3.5,Moderate-High,0,1,0,0,I,A,1,5.17,0,116.4,1,4.41,0,HBV,1,13.3,1,13.3
