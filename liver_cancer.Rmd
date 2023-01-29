@@ -19,7 +19,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 
 Here we walk through the pipeline of the latent Dirichlet Allocation (LDA) model, showing an example of its application on a scRNA-seq dataset from liver cancer patients.
-This dataset is obtained from a recent published nature [paper] (https://www.nature.com/articles/s41586-022-05400-x). 
+This dataset is obtained from a recent published nature [paper](https://www.nature.com/articles/s41586-022-05400-x). 
 
 
 # Starting point
@@ -38,12 +38,13 @@ Motivated by the similarities between text data mining and single-cell analysis,
 
 
 Before applying the LDA model, we also need to prepare the cell type count matrix as the input of LDA. 
-One common approach to get the cell type count matrix is to pool all cells together and do the clustering, when there is no batch effect. 
+One common approach to get the cell type count matrix is to pool all cells together and do the clustering.
 For example, you can use *Seurat* to cluster cells and prepare the cell type-by-sample matrix. 
+Before the pooled clustering analysis, we highly recommend to check if there is a batch effect across patients.
 
 In this workflow, we use a published dataset to illustrate the application of LDA on single-cell dataset. 
 We just downloaded the clustered data, including annotated cell types and cell type-by-sample count matrix from the paper. 
-All data used in the analysis can be found in the supplementary data files of the original paper or in the [data portal] (http://zhangninglab.com:3838/scPLC/).
+All data used in the analysis can be found in the supplementary data files of the original paper or in the [data portal](http://zhangninglab.com:3838/scPLC/).
 All cell types have been well-annotated in the original paper.  
 
 
@@ -62,15 +63,13 @@ In this workflow, we use some R packages for data visualization and analysis. Bu
 
 ```{r}
 library(tidyverse)
-library(corrplot)
 library(ComplexHeatmap)
-library(ggpubr)
 library(survminer)
 library(survival)
 library(RColorBrewer)
 ```
 
-Then we read the cell type count matrix, which was download from the data portal (http://zhangninglab.com:3838/scPLC/). We include 130 tumor tissue samples from 119 patients. Several patients have multiple tumor tissue samples.  
+Then we read the cell type count matrix, which was download from the the [data portal](http://zhangninglab.com:3838/scPLC/). We include 130 tumor tissue samples from 119 patients. Several patients have multiple tumor tissue samples.  
 
 ```{r}
 metadata.sel.count_tumor_tissue <- read.csv("https://raw.githubusercontent.com/xiyupeng/LDA_examples/main/data/metadata-sel-count_tumor_tissue.csv",row.names = 1)
@@ -92,8 +91,8 @@ dim(data_matrix)
 # Model inference
 
 We use *topicmodels* R package for model inference. The package provides two algorithms, variation EM and Gibbs sampling, for model inference. The two different algorithms may contribute to different results. 
-See the documentation of the package (https://cran.microsoft.com/snapshot/2016-09-30/web/packages/topicmodels/vignettes/topicmodels.pdf).
-But according to the documentation, the Gibbs sampling algorithm seems to return better models than Variation EM. Thus we prefer Gibbs sampling in the analysis. We used the following setting for Gibbs sampling: iter = 1000, burnin = 1000, thin = 100 (1000 Gibbs sampling draws are made with the first 1000 iterations discarded and then every 100th iteration kept).
+See the [documentation](https://cran.microsoft.com/snapshot/2016-09-30/web/packages/topicmodels/vignettes/topicmodels.pdf) of the *topicmodels* R package.
+But in the example given in the R package, the Gibbs sampling algorithm seems to return better models than Variation EM. Thus we prefer Gibbs sampling in the analysis. We used the following setting for Gibbs sampling: iter = 1000, burnin = 1000, thin = 100 (1000 Gibbs sampling draws are made with the first 1000 iterations discarded and then every 100th iteration kept).
 
 Number of topics K also needs to be selected before running the model inference. Since the original paper identifies five TIME subtypes, we choose K = 5. You may use R package *ldatuning* or cross-validation to select number of topics K. 
 
@@ -125,7 +124,7 @@ rownames(para$terms)<-paste0("topic",rownames(para$terms))
 
 The main output of the LDA model contains two matrix: 
 
-1. Topic content matrix (cell type-by-topic matrix) represents topics as different discrete distributions over cell types
+1. **Topic content matrix** (cell type-by-topic matrix) represents topics as different discrete distributions over cell types
 
 
 ```{r}
@@ -139,7 +138,7 @@ Or you can find clusters with top weight for each topic.
 terms(lda,5)
 ```
 
-2. Topic prevalence matrix (topic-by-sample matrix) displays topic proportions estimated per sample
+2. **Topic prevalence matrix** (topic-by-sample matrix) displays topic proportions estimated per sample
 
 
 ```{r}
@@ -172,8 +171,12 @@ clinical_data_merge<-merge(clinical_data,TIME_subtype,by = "Patient")
 clinical_data_merge <- clinical_data_merge %>% select_if(~ !any(is.na(.)))
 save(clinical_data_merge,file = "~/flow_cytometry/manuscript/liver cancer data/clinical_data.Rdata")
 ```
-The first step is to prepare the meta data file, combining clinical data and assigned TIME subtypes as a single data frame. We have prepared the data frame and we just uploaded the pre-cleaned data. The original data files are the supplementary data files in the original paper.
-The cleand data file *clinical_data.Rdata* can be download from [here] (https://github.com/xiyupeng/LDA_examples/raw/main/data/clinical_data.Rdata). 
+The first step is to prepare the meta data file, combining clinical data and assigned TIME subtypes as a single data frame. 
+The clinical data file `liver_cancer_patient_clinical_data.csv` and TIME subtype data file `TIME_subtypes.csv` are supplementary data files from the original paper. The two data files can also be downloaded from [here](https://github.com/xiyupeng/LDA_examples/tree/main/data).
+
+
+We have prepared the data frame and we just uploaded the pre-cleaned data. The original data files are the supplementary data files in the original paper.
+The cleaned data file `clinical_data.Rdata` can be download from [here](https://github.com/xiyupeng/LDA_examples/raw/main/data/clinical_data.Rdata).
 
 This data frame has 30 columns from 111 patients.
 We first check column names of the 30 columns.
