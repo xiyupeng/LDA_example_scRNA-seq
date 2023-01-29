@@ -19,27 +19,32 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 
 Here we walk through the pipeline of the latent Dirichlet Allocation (LDA) model, showing an example of its application on a scRNA-seq dataset from liver cancer patients.
-This dataset is obtained from a recent published nature paper. (https://www.nature.com/articles/s41586-022-05400-x). All data used in the analysis can be found in the supplementary data files of the original paper or in the data portal (http://zhangninglab.com:3838/scPLC/).
+This dataset is obtained from a recent published nature [paper] (https://www.nature.com/articles/s41586-022-05400-x). 
 
 
 # Starting point
 
-
-
-In text mining, LDA requires the input as a count matrix, where each row represent each document,each column represent each term, each entry in the matrix is the number of occurrences of each term (a word is a single occurrence of a term). Motivated by the similarities between text data mining and single-cell analysis, for single-cell analysis, LDA consider:
+In text mining, LDA requires the input as a document-by-term count matrix, where each row represent each document,each column represent each term, 
+each entry in the matrix is the number of occurrences of each term (a word is a single occurrence of a term). 
+Motivated by the similarities between text data mining and single-cell analysis, for single-cell analysis, LDA consider:
 
 - **cells as words,**
 
 - **cell types as terms,**
 
-- **patient samples as document,**
+- **patient samples as documents,**
 
 - **biological processes as topics.**
 
 
-Before applying the LDA model, we also need to prepare the cell type count matrix as the input of LDA. One common approach to get the cell type count matrix is to pool all cells together and do the clustering, if there is no batch effect. 
+Before applying the LDA model, we also need to prepare the cell type count matrix as the input of LDA. 
+One common approach to get the cell type count matrix is to pool all cells together and do the clustering, when there is no batch effect. 
+For example, you can use *Seurat* to cluster cells and prepare the cell type-by-sample matrix. 
 
-In this workflow, we use the published dataset to illustrate. We just download and use the cell type count matrix from the paper. All cell types have been well-annotated in the original paper.  
+In this workflow, we use a published dataset to illustrate the application of LDA on single-cell dataset. 
+We just downloaded the clustered data, including annotated cell types and cell type-by-sample count matrix from the paper. 
+All data used in the analysis can be found in the supplementary data files of the original paper or in the [data portal] (http://zhangninglab.com:3838/scPLC/).
+All cell types have been well-annotated in the original paper.  
 
 
 # Getting ready
@@ -78,7 +83,7 @@ removed_clusters<-c("CD4T_01_CCR7", "CD4T_09_FOXP3", "CD8T_01_CCR7", "CD8T_02_CX
 data_matrix<- metadata.sel.count_tumor_tissue %>% dplyr::select(!removed_clusters)
 ```
 
-The final input data for LDA has 130 samples with 76 features (clusters)
+The final input data matrix for LDA has 130 samples with 76 features (clusters).
 
 ```{r}
 dim(data_matrix)
@@ -86,24 +91,33 @@ dim(data_matrix)
 
 # Model inference
 
+We use *topicmodels* R package for model inference. The package provides two algorithms, variation EM and Gibbs sampling, for model inference. The two different algorithms may contribute to different results. 
+See the documentation of the package (https://cran.microsoft.com/snapshot/2016-09-30/web/packages/topicmodels/vignettes/topicmodels.pdf).
+But according to the documentation, the Gibbs sampling algorithm seems to return better models than Variation EM. Thus we prefer Gibbs sampling in the analysis. We used the following setting for Gibbs sampling: iter = 1000, burnin = 1000, thin = 100 (1000 Gibbs sampling draws are made with the first 1000 iterations discarded and then every 100th iteration kept).
+
+Number of topics K also needs to be selected before running the model inference. Since the original paper identifies five TIME subtypes, we choose K = 5. You may use R package *ldatuning* or cross-validation to select number of topics K. 
+
+The Gibbs sampling will take several minutes. We can save the result here for further analysis.
 
 ```{r,eval=FALSE}
+## prepare data format
 count_matrix_triplet <- as.simple_triplet_matrix(as.matrix(data_matrix))
 
+## model inference 
 lda<-LDA(count_matrix_triplet, control = list(seed = 2021, burnin = 1000,thin = 100, iter = 1000), k =5, method = "Gibbs")
 
+## save the data
 save(lda, file = "~/flow_cytometry/manuscript/liver cancer data/LDA_K5_filtered.Rdata")
-
 ```
 
-It may take several minutes with the Gibbs Sampling. We can save the result at this moment for further analysis
+Below we reload the data and check the output of the LDA model.
 
 ```{r}
-# load the data
+## load the data
 load(file = "~/flow_cytometry/manuscript/liver cancer data/LDA_K5_filtered.Rdata")
 ntopics = 5
 
-## output of the LDA model
+## extract output of the LDA model
 para<-posterior(lda)
 colnames(para$topic)<-paste0("topic",colnames(para$topic))
 rownames(para$terms)<-paste0("topic",rownames(para$terms))
@@ -133,7 +147,7 @@ terms(lda,5)
 head(round(para$topics,3))
 ```
 
-The topic prevalence matrix is merged with the original data frame for further analysis. But before we investigating the distribution of topics, we need to exam the content of each topic by selecting representative cell types
+The topic prevalence matrix is merged with the original data frame for further analysis. But before we investigating the distribution of topics, we need to exam the content of each topic by selecting representative cell types.
 
 ```{r}
 metadata.sel.count_tumor_tissue<-as.data.frame(cbind(metadata.sel.count_tumor_tissue,para$topic))
@@ -145,11 +159,9 @@ metadata.sel.count_tumor_tissue$pt<-gsub("_.*","",rownames(metadata.sel.count_tu
 
 # Association to meta data
 
-After we identified the major five topics, we want to exam the prevalence of the topics and correlate to clinical outcomes.
+Our next step is to exam the prevalence of the topics and correlate to clinical outcomes.
 
-Same as the paper, we only focus on tumor tissue samples from primary liver cancer patients with the three major histological subtypes (HCC, ICC, and CHC) in order to identify TIME (tumour immune microenvironment) subtypes.
-
-The first step is to prepare the meta data file, combining clinical data and assigned TIME subtypes as a single data frame. We have prepared the data frame and we just uploaded the pre-cleaned data. The original data files are the supplementary data files in the original paper.
+Same as the paper, we only focus on tumor tissue samples from primary liver cancer patients with the three major histological subtypes (HCC, ICC, and CHC). The original paper identified five different TIME in tumor tissue samples, including immune activation (IA), immune suppression mediated by myeloid (ISM) or stromal cells (ISS), immune exclusion (IE), and immune residence (IR) phenotypes.
 
 ```{r,echo=FALSE,eval=FALSE}
 ## prepare meta data
@@ -160,8 +172,11 @@ clinical_data_merge<-merge(clinical_data,TIME_subtype,by = "Patient")
 clinical_data_merge <- clinical_data_merge %>% select_if(~ !any(is.na(.)))
 save(clinical_data_merge,file = "~/flow_cytometry/manuscript/liver cancer data/clinical_data.Rdata")
 ```
+The first step is to prepare the meta data file, combining clinical data and assigned TIME subtypes as a single data frame. We have prepared the data frame and we just uploaded the pre-cleaned data. The original data files are the supplementary data files in the original paper.
+The cleand data file *clinical_data.Rdata* can be download from [here] (https://github.com/xiyupeng/LDA_examples/raw/main/data/clinical_data.Rdata). 
 
-Check column names of the 30 columns.
+This data frame has 30 columns from 111 patients.
+We first check column names of the 30 columns.
 
 ```{r}
 load(file = "~/flow_cytometry/manuscript/liver cancer data/clinical_data.Rdata")
