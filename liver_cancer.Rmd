@@ -185,7 +185,7 @@ ap_topics %>%
 
 In the next section `Association to meta data`, you will find topic 1 is correlated to the Immune Exclusion(IE) subtype, topic 2 -to the immune suppression mediated by myeloid (ISM) subtype, topic 3 -to the immune residence (IR) subtype, topic 4 -to the immune activation (IA) subtype, and topic 5 -to the immune suppression mediated by stromal cells (ISS) subtypes. We use label `topic_IE`, `topic_ISM`, `topic_IR`, `topic_IA`, `topic_ISS` to annotate the five topics we identified with the LDA model.
 
-One main drawback of using topic weight to select representatives is that sometimes high abundance clusters with little variation may also be selected due to high topic weights.
+One main drawback of using topic weight to select representatives is that high abundant clusters with little variation are likely to be selected as representatives due to their high topic weights.
 In our analysis, the top representative clusters from each topic are selected after ranking by lift, which is the ratio of estimated topic weights over its empirical frequency. 
 The lift metic gives higher weights to clusters that appear less frequently in other topics. 
 
@@ -236,6 +236,7 @@ clinical_data_merge<-merge(clinical_data,TIME_subtype,by = "Patient")
 clinical_data_merge <- clinical_data_merge %>% select_if(~ !any(is.na(.)))
 save(clinical_data_merge,file = "~/flow_cytometry/manuscript/liver cancer data/clinical_data.Rdata")
 ```
+
 The first step is to prepare the metadata file, combining clinical data and assigned TIME subtypes as a single data frame. 
 The clinical data file `liver_cancer_patient_clinical_data.csv` and TIME subtype data file `TIME_subtypes.csv` are supplementary data files from the original paper. The two data files can be downloaded from [here](https://github.com/xiyupeng/LDA_examples/tree/main/data).
 We have prepared the a cleaned data file `clinical_data.Rdata`, which can be downloaded from [here](https://github.com/xiyupeng/LDA_examples/raw/main/data/clinical_data.Rdata).
