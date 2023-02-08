@@ -90,11 +90,13 @@ dim(data_matrix)
 
 # Model inference
 
-We use *topicmodels* R package for model inference. The package provides two algorithms, variation EM and Gibbs sampling, for model inference. The two different algorithms may contribute to different results. 
-See the [documentation](https://cran.microsoft.com/snapshot/2016-09-30/web/packages/topicmodels/vignettes/topicmodels.pdf) of the *topicmodels* R package.
-But in the example given in the R package, the Gibbs sampling algorithm seems to return better models than Variation EM. Thus we prefer Gibbs sampling in the analysis. We used the following setting for Gibbs sampling: iter = 1000, burnin = 1000, thin = 100 (1000 Gibbs sampling draws are made with the first 1000 iterations discarded and then every 100th iteration kept).
+We use *topicmodels* R package for model inference. We use Gibbs sampling algorithm and choose number of topics K = 5:
 
-Number of topics K also needs to be selected before running the model inference. Since the original paper identifies five TIME subtypes, we choose K = 5. You may use R package *ldatuning* or cross-validation to select number of topics K. 
+- **Gibbs sampling**. The topicmodels R package provides two algorithms, variation EM and Gibbs sampling, for model inference. The two different algorithms may contribute to different results (See the [documentation](https://cran.microsoft.com/snapshot/2016-09-30/web/packages/topicmodels/vignettes/topicmodels.pdf) of the *topicmodels* R package).
+But in the example given in the R package, the Gibbs sampling algorithm seems to return better models than Variation EM. 
+Thus we prefer Gibbs sampling in the analysis. We used the following setting for Gibbs sampling: iter = 1000, burnin = 1000, thin = 100 (1000 Gibbs sampling draws are made with the first 1000 iterations discarded and then every 100th iteration kept).
+
+- **K = 5**. Number of topics K also needs to be selected before running the model inference. Since the original paper identifies five TIME subtypes, we choose K = 5. You may use R package *ldatuning* or cross-validation to select number of topics K. 
 
 The Gibbs sampling will take several minutes. We can save the result here for further analysis.
 
@@ -132,11 +134,6 @@ The main output of the LDA model contains two matrix:
 head(round(para$terms[,1:5],5))
 ```
 
-Or you can find clusters with top weight for each topic.
-
-```{r}
-terms(lda,5)
-```
 
 2. **Topic prevalence matrix** (topic-by-sample matrix) displays topic proportions estimated per sample
 
@@ -146,7 +143,7 @@ terms(lda,5)
 head(round(para$topics,3))
 ```
 
-The topic prevalence matrix is merged with the original data frame for further analysis. But before we investigating the distribution of topics, we need to exam the content of each topic by selecting representative cell types.
+The topic prevalence matrix is merged with the original data frame for further analysis. But before we investigating the distribution of topics, we want to exam the topic content matrix and interpret each topic by selecting representative cell types.
 
 ```{r}
 metadata.sel.count_tumor_tissue<-as.data.frame(cbind(metadata.sel.count_tumor_tissue,para$topic))
@@ -155,12 +152,80 @@ metadata.sel.count_tumor_tissue$pt<-gsub("_.*","",rownames(metadata.sel.count_tu
 
 # Representative cell types
 
+The interpretability of topic models is a key advantage. In text analysis, representative terms, in this case, representative clusters, are used to define topics. 
+Sometimes people directly use the topic weigts in topic content matrix to select representative terms.
 
-# Association to meta data
+In this case, you can simply find clusters with top weight for each topic with `terms()`,
+
+```{r}
+terms(lda,5)
+```
+
+or visualize them with barplots.
+
+
+```{r}
+### beta
+ap_topics <- tidy(lda, matrix = "beta")
+ap_topics$topic<-as.factor(paste0("topic",ap_topics$topic))
+levels(ap_topics$topic)<-c("topic1", "topic2", "topic3", "topic4", "topic5")
+
+ap_topics %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 10) %>% 
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE,orientation = "y") +
+  facet_wrap(~ topic, scales = "free") + 
+  scale_y_reordered()+theme_bw()+
+  xlab("topic weight")+ylab("cell cluster")
+```
+
+In the next section `Association to meta data`, you will find topic 1 is correlated to the Immune Exclusion(IE) subtype, topic 2 -to the immune suppression mediated by myeloid (ISM) subtype, topic 3 -to the immune residence (IR) subtype, topic 4 -to the immune activation (IA) subtype, and topic 5 -to the immune suppression mediated by stromal cells (ISS) subtypes. We use label `topic_IE`, `topic_ISM`, `topic_IR`, `topic_IA`, `topic_ISS` to annotate the five topics we identified with the LDA model.
+
+One main drawback of using topic weight to select representatives is that sometimes high abundance clusters with little variation may also be selected due to high topic weights.
+In our analysis, the top representative clusters from each topic are selected after ranking by lift, which is the ratio of estimated topic weights over its empirical frequency. 
+The lift metic gives higher weights to clusters that appear less frequently in other topics. 
+
+Below show top clusters with top lift for each topic. These clusters are largely overlapped with the manually-selected clusters in the original paper.
+
+```{r}
+### calcualte the lift (log ratio of beta over cluster empirical frequency)
+wordcounts <- colSums(data_matrix)
+logbeta <- lda@beta
+emp.prob <- log(wordcounts) - log(sum(wordcounts))
+lift <- logbeta - rep(emp.prob, each = nrow(logbeta))
+
+colnames(lift)<-lda@terms
+lift<-as.data.frame(lift)
+lift$topic<-as.factor(paste0("topic",1:ntopics))
+levels(lift$topic)<-c("topic-IE", "topic-ISM", "topic-IR", "topic-IA", "topic-ISS")
+
+### show top clusters for each topic
+lift_top_terms <- lift %>% gather(.,key = cluster,value = lift,-topic) %>%
+  group_by(topic) %>%
+  slice_max(lift, n = 15) %>% 
+  ungroup() %>%
+  arrange(topic, -lift)
+
+lift_top_terms %>%
+  mutate(cluster = reorder_within(cluster, lift, topic)) %>%
+  ggplot(aes(lift, cluster, fill = factor(topic))) +
+  geom_col(show.legend = FALSE,orientation = "y") +
+  facet_wrap(~ topic, scales = "free") + 
+  scale_y_reordered()+theme_bw()+
+  xlab("lift (log-ratio of topic weight over cell cluster frequency)")+ylab("cell cluster")
+```
+
+
+# Association to metadata
 
 Our next step is to exam the prevalence of the topics and correlate to clinical outcomes.
 
-Same as the paper, we only focus on tumor tissue samples from primary liver cancer patients with the three major histological subtypes (HCC, ICC, and CHC). The original paper identified five different TIME in tumor tissue samples, including immune activation (IA), immune suppression mediated by myeloid (ISM) or stromal cells (ISS), immune exclusion (IE), and immune residence (IR) phenotypes.
+The original paper identified five different TIME in tumor tissue samples, including immune activation (IA), immune suppression mediated by myeloid (ISM) or stromal cells (ISS), immune exclusion (IE), and immune residence (IR) phenotypes. However, the challenge with the original approach is the highly ad hoc procedure the authors used, involving several complicated steps that heavily require immunological knowledge: 1) Identification of five groups of highly correlated clusters, 2) manual selection of gene signatures per group, and 3) classifying patients into five TIME subtypes based on the selected gene signatures that involve much subjectivity. Later we show applying the LDA model, we also identified five topics, which correspond to the five TIME subtypes in a **completely unsupervised** fashion. 
+
 
 ```{r,echo=FALSE,eval=FALSE}
 ## prepare meta data
@@ -171,14 +236,13 @@ clinical_data_merge<-merge(clinical_data,TIME_subtype,by = "Patient")
 clinical_data_merge <- clinical_data_merge %>% select_if(~ !any(is.na(.)))
 save(clinical_data_merge,file = "~/flow_cytometry/manuscript/liver cancer data/clinical_data.Rdata")
 ```
-The first step is to prepare the meta data file, combining clinical data and assigned TIME subtypes as a single data frame. 
-The clinical data file `liver_cancer_patient_clinical_data.csv` and TIME subtype data file `TIME_subtypes.csv` are supplementary data files from the original paper. The two data files can also be downloaded from [here](https://github.com/xiyupeng/LDA_examples/tree/main/data).
+The first step is to prepare the metadata file, combining clinical data and assigned TIME subtypes as a single data frame. 
+The clinical data file `liver_cancer_patient_clinical_data.csv` and TIME subtype data file `TIME_subtypes.csv` are supplementary data files from the original paper. The two data files can be downloaded from [here](https://github.com/xiyupeng/LDA_examples/tree/main/data).
+We have prepared the a cleaned data file `clinical_data.Rdata`, which can be downloaded from [here](https://github.com/xiyupeng/LDA_examples/raw/main/data/clinical_data.Rdata).
+Same as the paper, we also only focus on the three major histological subtypes (HCC, ICC, and CHC). 
 
-
-We have prepared the data frame and we just uploaded the pre-cleaned data. The original data files are the supplementary data files in the original paper.
-The cleaned data file `clinical_data.Rdata` can be download from [here](https://github.com/xiyupeng/LDA_examples/raw/main/data/clinical_data.Rdata).
-
-This data frame has 30 columns from 111 patients.
+Below we upload the cleaned metadata file. 
+This data frame has 30 columns from 111 liver cancer patients with HCC, ICC, and CHC.
 We first check column names of the 30 columns.
 
 ```{r}
@@ -187,18 +251,24 @@ dim(clinical_data_merge)
 colnames(clinical_data_merge)
 ```
 
-We merge the clinical data `clinical_data_merge` with the scRNA-seq data matrix `metadata.sel.count_tumor_tissue`. For patient with multiple samples, only the first sample of the patient in the data matrix `metadata.sel.count_tumor_tissue` will be kept.
+We merge the clinical data `clinical_data_merge` with the count matrix of scRNA-seq `metadata.sel.count_tumor_tissue`. For patient with multiple samples, only the first sample of the patient in the data matrix `metadata.sel.count_tumor_tissue` will be kept.
 
 ```{r}
 data_merge<-merge(clinical_data_merge,metadata.sel.count_tumor_tissue,by.x = "Patient",by.y = "pt")
+data_merge<-distinct(data_merge,Patient,.keep_all = TRUE)
+dim(data_merge)
 ```
 
-A heatmap can help to visualize the distribution of topics.
+A heatmap can help to visualize the distribution of topics across patients. In the heatmap, it is clear we can find that topic 1 is correlated to the IE phenotype, topic 2 -to the ISM phenotype, topic 3 -to the IR phenotype, topic 4 -to the IA phenotype, and topic 5 -to the ISS phenotype.
+Compared to the simple clustering method in the original paper, LDA directly correlates topics (or cellular modules, TIME subtypes) to patient-level clinical outcomes, while the original paper relies on module-specific gene signatures as the link. 
+LDA can not only identify the topics, but also quantify topic fraction within each sample.
+It can provide novel insights on complex immune phenotypes among patients and complex and unique pharmacodynamic changes upon treatment.
 
 ```{r,fig.height=12,fig.width=12}
 ## prepare data for the heatmap
 pt_meta  <- data_merge %>%  select(Patient,Cancer_type_short,Differentiation,"Relapse_state..Yes.0.", "FPS_time","OS_state..Yes.0.","OS_time", TIMELASER)
 gamma_data<-data_merge %>% select(starts_with("topic"))
+colnames(gamma_data)<-c("topic-IE", "topic-ISM", "topic-IR", "topic-IA", "topic-ISS")
 
 ## pre-identify patient subgroups with hierarchical clustering
 rows.tree<-hclust(dist(gamma_data))
@@ -221,9 +291,23 @@ ann_colors = list(
 ComplexHeatmap::pheatmap(gamma_data,annotation_row =pt_meta_select,cutree_rows = 5,annotation_colors = ann_colors)
 ```
 
+We can also show topic fraction within each sample.
+
+```{r,fig.width=12}
+topic_fraction<-data_merge  %>% 
+  select(starts_with("topic"),Patient) %>%
+  gather(key = "Topic",value = "fraction",-Patient)
+topic_fraction$Topic<-as.factor(topic_fraction$Topic)
+levels(topic_fraction$Topic)<-c("topic-IE", "topic-ISM", "topic-IR", "topic-IA", "topic-ISS")
+
+my_orders<-data_merge$Patient[rows.tree$order]
+p1<-ggbarplot(topic_fraction,"Patient","fraction",fill = "Topic",color = "Topic")+ylab("Topic fraction")+xlab("Patient")+scale_x_discrete(limits = my_orders)
+ggpar(p1,font.xtickslab  = c(5,"bold"),xtickslab.rt = 45)
+```
+
 # Survival Analysis
 
-Kaplan-Meier analysis of OS and PFS stratified by five patient subgroups.
+Based on topic fractions, we can roughly divide patients into five groups based on their topic fraction. Below we draw the Kaplan-Meier analysis plot of OS and PFS stratified by five patient subgroups.
 
 ```{r}
 data_merge$OS_state..Yes.0.<-ifelse(data_merge$OS_state..Yes.0.>0, 0, 1)
@@ -240,7 +324,7 @@ pfs<-Surv(data_merge$FPS_time, data_merge$Relapse_state..Yes.0.)
 ggsurvplot(survfit(pfs ~ Group, data = pt_meta),pval=TRUE,palette = cbPalette,censor.shape="|", censor.size=4,  legend.labs=my.labs)+ylab("Progression Free Probability")+xlab("Time(mos)")
 ```
 
-Kaplan-Meier analysis of OS and PFS stratified by five TIME subtypes.
+We also draw the Kaplan-Meier analysis plot of OS and PFS stratified by five TIME subtypes defined by the original paper.
 
 ```{r}
 TIMEPalette<-brewer.pal(n = 5, name = 'Dark2')

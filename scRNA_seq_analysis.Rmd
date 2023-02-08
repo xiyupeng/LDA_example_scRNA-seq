@@ -32,12 +32,10 @@ library(RColorBrewer)
 * liver cancer data
 
 ```{r}
-metadata.sel.count_tumor_tissue <- read.csv("~/flow_cytometry/manuscript/liver cancer data/metadata-sel-count_tumor_tissue.csv")
+metadata.sel.count_tumor_tissue <- read.csv("~/flow_cytometry/manuscript/liver cancer data/metadata-sel-count_tumor_tissue.csv",row.names = 1)
 removed_clusters<-c("CD4T_01_CCR7", "CD4T_09_FOXP3", "CD8T_01_CCR7", "CD8T_02_CX3CR1", 
 "CD8T_03_GZMK_S1PR1", "gdT_01_GNLY_S1PR5", "NK_01_FCGR3A_CX3CR1", 
 "MonoDC", "Mo_01_CD14", "Mo_02_CD16", "Neu_02_S100A12", "Neu_03_ISG15", "Neu_04_TXNIP")
-rownames(metadata.sel.count_tumor_tissue)<-metadata.sel.count_tumor_tissue$X
-metadata.sel.count_tumor_tissue<-as.data.frame(metadata.sel.count_tumor_tissue[,-1])
 data_matrix<-metadata.sel.count_tumor_tissue
 data_matrix<- data_matrix %>% dplyr::select(!removed_clusters)
 ```
@@ -56,7 +54,6 @@ count_matrix_triplet <- as.simple_triplet_matrix(as.matrix(data_matrix))
 lda<-LDA(count_matrix_triplet, control = list(seed = 2021, burnin = 1000,thin = 100, iter = 1000), k = 5, method = "Gibbs")
 topics(lda)
 terms(lda,10)
-para<-posterior(lda)
 save(lda, file = "~/flow_cytometry/manuscript/liver cancer data/LDA_K5_filtered.Rdata")
 ntopics<-5
 ```
@@ -66,14 +63,14 @@ ntopics<-5
 ```{r}
 ntopics<-5
 load(file = "~/flow_cytometry/manuscript/liver cancer data/LDA_K5_filtered.Rdata")
+para<-posterior(lda)
+colnames(para$topic)<-paste0("topic",colnames(para$topic))
 ```
 
 
 ```{r,fig.width=5}
 #### update to X50_res0.8
 metadata.sel.count_tumor_tissue$topic<-topics(lda)
-para<-posterior(lda)
-colnames(para$topic)<-paste0("topic",colnames(para$topic))
 metadata.sel.count_tumor_tissue<-as.data.frame(cbind(metadata.sel.count_tumor_tissue,para$topic))
 
 ### beta
@@ -125,7 +122,6 @@ lift_top_terms %>%
   scale_y_reordered()+theme_bw()+
   xlab("lift (log-ratio of topic weight over cell cluster frequency)")+ylab("cell cluster")
 ```
-
 
 
 ```{r}
