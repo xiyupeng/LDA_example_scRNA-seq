@@ -409,7 +409,7 @@ ntopics = 5
 
 ## extract output of the LDA model
 para&lt;-posterior(lda)
-colnames(para$topic)&lt;-paste0(&quot;topic&quot;,colnames(para$topic))
+colnames(para$topics)&lt;-paste0(&quot;topic&quot;,colnames(para$topics))
 rownames(para$terms)&lt;-paste0(&quot;topic&quot;,rownames(para$terms))</code></pre>
 <p>The main output of the LDA model contains two matrix:</p>
 <ol style="list-style-type: decimal">
@@ -428,13 +428,13 @@ head(round(para$terms[,1:5],5))</code></pre>
 </ol>
 <pre class="r"><code>## show first five rows
 head(round(para$topics,3))</code></pre>
-<pre><code>##              1     2     3     4     5
-## A002_ICC 0.030 0.052 0.663 0.023 0.232
-## A003_ICC 0.007 0.204 0.210 0.018 0.562
-## A004_ICC 0.013 0.095 0.763 0.003 0.127
-## A005_ICC 0.007 0.605 0.065 0.012 0.311
-## A006_ICC 0.118 0.029 0.478 0.026 0.350
-## A007_ASC 0.006 0.126 0.093 0.058 0.717</code></pre>
+<pre><code>##          topic1 topic2 topic3 topic4 topic5
+## A002_ICC  0.030  0.052  0.663  0.023  0.232
+## A003_ICC  0.007  0.204  0.210  0.018  0.562
+## A004_ICC  0.013  0.095  0.763  0.003  0.127
+## A005_ICC  0.007  0.605  0.065  0.012  0.311
+## A006_ICC  0.118  0.029  0.478  0.026  0.350
+## A007_ASC  0.006  0.126  0.093  0.058  0.717</code></pre>
 <p>The topic prevalence matrix is merged with the original data frame for further analysis. But before we investigating the distribution of topics, we want to exam the topic content matrix and interpret each topic by selecting representative cell types.</p>
 <pre class="r"><code>metadata.sel.count_tumor_tissue&lt;-as.data.frame(cbind(metadata.sel.count_tumor_tissue,para$topic))
 metadata.sel.count_tumor_tissue$pt&lt;-gsub(&quot;_.*&quot;,&quot;&quot;,rownames(metadata.sel.count_tumor_tissue))</code></pre>
@@ -474,9 +474,9 @@ ap_topics %&gt;%
   scale_y_reordered()+theme_bw()+
   xlab(&quot;topic weight&quot;)+ylab(&quot;cell cluster&quot;)</code></pre>
 <p><img src="liver_cancer_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
-<p>In the next section <code>Association to meta data</code>, you will find topic 1 is correlated to the Immune Exclusion(IE) subtype, topic 2 -to the immune suppression mediated by myeloid (ISM) subtype, topic 3 -to the immune residence (IR) subtype, topic 4 -to the immune activation (IA) subtype, and topic 5 -to the immune suppression mediated by stromal cells (ISS) subtypes. We use label <code>topic_IE</code>, <code>topic_ISM</code>, <code>topic_IR</code>, <code>topic_IA</code>, <code>topic_ISS</code> to annotate the five topics we identified with the LDA model.</p>
-<p>One main drawback of using topic weight to select representatives is that high abundant clusters with little variation are likely to be selected as representatives due to their high topic weights. In our analysis, the top representative clusters from each topic are selected after ranking by lift, which is the ratio of estimated topic weights over its empirical frequency. The lift metic gives higher weights to clusters that appear less frequently in other topics.</p>
-<p>Below show top clusters with top lift for each topic. These clusters are largely overlapped with the manually-selected clusters in the original paper.</p>
+<p>In the next section <code>Association to meta data</code>, you will find topic 1 is correlated to the Immune Exclusion(IE) subtype, topic 2 to the immune suppression mediated by myeloid (ISM) subtype, topic 3 to the immune residence (IR) subtype, topic 4 to the immune activation (IA) subtype, and topic 5 to the immune suppression mediated by stromal cells (ISS) subtypes. We use label <code>topic_IE</code>, <code>topic_ISM</code>, <code>topic_IR</code>, <code>topic_IA</code>, <code>topic_ISS</code> to annotate the five topics we identified with the LDA model.</p>
+<p>One main drawback of using topic weight to select representatives is that high abundant clusters with little variation are likely to be selected as representatives due to their high topic weights. In our analysis, the top representative clusters from each topic are selected after ranking by lift, which is the log ratio of estimated topic weights over its empirical frequency. The lift metric gives higher weights to clusters that appear less frequently in other topics.</p>
+<p>Below we show top clusters with top lift for each topic. These clusters are largely overlapped with the manually-selected clusters in the original paper.</p>
 <pre class="r"><code>### calcualte the lift (log ratio of beta over cluster empirical frequency)
 wordcounts &lt;- colSums(data_matrix)
 logbeta &lt;- lda@beta
@@ -507,7 +507,7 @@ lift_top_terms %&gt;%
 <div id="association-to-metadata" class="section level1">
 <h1>Association to metadata</h1>
 <p>Our next step is to exam the prevalence of the topics and correlate to clinical outcomes.</p>
-<p>The original paper identified five different TIME in tumor tissue samples, including immune activation (IA), immune suppression mediated by myeloid (ISM) or stromal cells (ISS), immune exclusion (IE), and immune residence (IR) phenotypes. However, the challenge with the original approach is the highly ad hoc procedure the authors used, involving several complicated steps that heavily require immunological knowledge: 1) Identification of five groups of highly correlated clusters, 2) manual selection of gene signatures per group, and 3) classifying patients into five TIME subtypes based on the selected gene signatures that involve much subjectivity. Later we show applying the LDA model, we also identified five topics, which correspond to the five TIME subtypes in a <strong>completely unsupervised</strong> fashion.</p>
+<p>The original paper identified five different TIME in tumor tissue samples, including immune activation (IA), immune suppression mediated by myeloid (ISM) or stromal cells (ISS), immune exclusion (IE), and immune residence (IR) phenotypes. However, in the original paper, the authors used a highly ad hoc approach, involving several complicated steps that heavily require immunological knowledge: 1) Identification of five groups of highly correlated clusters, 2) manual selection of gene signatures per group, and 3) classifying patients into five TIME subtypes based on the selected gene signatures that involve much subjectivity. Later we show applying the LDA model, we also identified five topics, which correspond to the five TIME subtypes in a <strong>completely unsupervised</strong> fashion.</p>
 <p>The first step is to prepare the metadata file, combining clinical data and assigned TIME subtypes as a single data frame. The clinical data file <code>liver_cancer_patient_clinical_data.csv</code> and TIME subtype data file <code>TIME_subtypes.csv</code> are supplementary data files from the original paper. The two data files can be downloaded from <a href="https://github.com/xiyupeng/LDA_examples/tree/main/data">here</a>. We have prepared the a cleaned data file <code>clinical_data.Rdata</code>, which can be downloaded from <a href="https://github.com/xiyupeng/LDA_examples/raw/main/data/clinical_data.Rdata">here</a>. Same as the paper, we also only focus on the three major histological subtypes (HCC, ICC, and CHC).</p>
 <p>Below we upload the cleaned metadata file. This data frame has 30 columns from 111 liver cancer patients with HCC, ICC, and CHC. We first check column names of the 30 columns.</p>
 <pre class="r"><code>load(file = &quot;~/flow_cytometry/manuscript/liver cancer data/clinical_data.Rdata&quot;)

@@ -120,7 +120,7 @@ ntopics = 5
 
 ## extract output of the LDA model
 para<-posterior(lda)
-colnames(para$topic)<-paste0("topic",colnames(para$topic))
+colnames(para$topics)<-paste0("topic",colnames(para$topics))
 rownames(para$terms)<-paste0("topic",rownames(para$terms))
 ```
 
@@ -183,13 +183,13 @@ ap_topics %>%
   xlab("topic weight")+ylab("cell cluster")
 ```
 
-In the next section `Association to meta data`, you will find topic 1 is correlated to the Immune Exclusion(IE) subtype, topic 2 -to the immune suppression mediated by myeloid (ISM) subtype, topic 3 -to the immune residence (IR) subtype, topic 4 -to the immune activation (IA) subtype, and topic 5 -to the immune suppression mediated by stromal cells (ISS) subtypes. We use label `topic_IE`, `topic_ISM`, `topic_IR`, `topic_IA`, `topic_ISS` to annotate the five topics we identified with the LDA model.
+In the next section `Association to meta data`, you will find topic 1 is correlated to the Immune Exclusion(IE) subtype, topic 2 to the immune suppression mediated by myeloid (ISM) subtype, topic 3 to the immune residence (IR) subtype, topic 4 to the immune activation (IA) subtype, and topic 5 to the immune suppression mediated by stromal cells (ISS) subtypes. We use label `topic_IE`, `topic_ISM`, `topic_IR`, `topic_IA`, `topic_ISS` to annotate the five topics we identified with the LDA model.
 
 One main drawback of using topic weight to select representatives is that high abundant clusters with little variation are likely to be selected as representatives due to their high topic weights.
-In our analysis, the top representative clusters from each topic are selected after ranking by lift, which is the ratio of estimated topic weights over its empirical frequency. 
-The lift metic gives higher weights to clusters that appear less frequently in other topics. 
+In our analysis, the top representative clusters from each topic are selected after ranking by lift, which is the log ratio of estimated topic weights over its empirical frequency. 
+The lift metric gives higher weights to clusters that appear less frequently in other topics. 
 
-Below show top clusters with top lift for each topic. These clusters are largely overlapped with the manually-selected clusters in the original paper.
+Below we show top clusters with top lift for each topic. These clusters are largely overlapped with the manually-selected clusters in the original paper.
 
 ```{r}
 ### calcualte the lift (log ratio of beta over cluster empirical frequency)
@@ -224,7 +224,7 @@ lift_top_terms %>%
 
 Our next step is to exam the prevalence of the topics and correlate to clinical outcomes.
 
-The original paper identified five different TIME in tumor tissue samples, including immune activation (IA), immune suppression mediated by myeloid (ISM) or stromal cells (ISS), immune exclusion (IE), and immune residence (IR) phenotypes. However, the challenge with the original approach is the highly ad hoc procedure the authors used, involving several complicated steps that heavily require immunological knowledge: 1) Identification of five groups of highly correlated clusters, 2) manual selection of gene signatures per group, and 3) classifying patients into five TIME subtypes based on the selected gene signatures that involve much subjectivity. Later we show applying the LDA model, we also identified five topics, which correspond to the five TIME subtypes in a **completely unsupervised** fashion. 
+The original paper identified five different TIME in tumor tissue samples, including immune activation (IA), immune suppression mediated by myeloid (ISM) or stromal cells (ISS), immune exclusion (IE), and immune residence (IR) phenotypes. However, in the original paper, the authors used a highly ad hoc approach, involving several complicated steps that heavily require immunological knowledge: 1) Identification of five groups of highly correlated clusters, 2) manual selection of gene signatures per group, and 3) classifying patients into five TIME subtypes based on the selected gene signatures that involve much subjectivity. Later we show applying the LDA model, we also identified five topics, which correspond to the five TIME subtypes in a **completely unsupervised** fashion. 
 
 
 ```{r,echo=FALSE,eval=FALSE}
