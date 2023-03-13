@@ -1,5 +1,5 @@
 ---
-title: "Application of LDA on longitudinal flow cytometry data of Malenoma patients"
+title: "Analyzing longitudinal flow cytometry data of Malenoma patients with TopicFlow"
 author: "Xiyu Peng"
 output:
     html_document:

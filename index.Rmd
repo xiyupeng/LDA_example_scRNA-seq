@@ -1,5 +1,5 @@
 ---
-title: "Exploring the heterogeneity in single-cell data with topic modeling"
+title: "Exploring the heterogeneity in single-cell data with TopicFlow, a topic modeling approach"
 author: "Xiyu Peng"
 date: "Jan 2023"
 ---
@@ -11,7 +11,7 @@ LDA is also flexible enough to be embedded in more complex models for inference,
 In single-cell analysis, LDA has been used to explore the heterogeneity in gene expression within samples. But it's rarely used to investigate the heterogeneity in single-cell data of a patient cohort.
 However, we realize the great potential of LDA to explore the heterogeneity in single-cell data at patient or sample level, especially in tracking the dynamics of cell types across time.
 
-This website shows examples of applications of Latent Dirichlet Allocation (LDA) model on different types of single-cell datasets.
+This website shows examples of applications of Latent Dirichlet Allocation (LDA) model (We now call it **TopicFlow**) on different types of single-cell datasets.
 
 - a scRNA-seq dataset of tumor tissue from liver cancer patients.  
 
@@ -26,4 +26,4 @@ composition in peripheral blood during cancer immunotherapy: a topic modeling
 approach”. (Under Review)
 
 
-![](figure.png)
+![**TopicFlow**](figure.png)

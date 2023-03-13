@@ -1,5 +1,5 @@
 ---
-title: "Exploring the heterogeneity in liver cancer scRNA-seq data with LDA"
+title: "Exploring the heterogeneity in liver cancer scRNA-seq data with TopicFlow"
 author: "Xiyu Peng"
 date: "Jan 2023"
 output:

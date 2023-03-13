@@ -12,7 +12,7 @@
 <meta name="author" content="Xiyu Peng" />
 
 
-<title>Exploring the heterogeneity in single-cell data with topic modeling</title>
+<title>Exploring the heterogeneity in single-cell data with TopicFlow, a topic modeling approach</title>
 
 <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -265,7 +265,7 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Exploring the heterogeneity in single-cell data with topic modeling</h1>
+<h1 class="title toc-ignore">Exploring the heterogeneity in single-cell data with TopicFlow, a topic modeling approach</h1>
 <h4 class="author">Xiyu Peng</h4>
 <h4 class="date">Jan 2023</h4>
 
@@ -274,14 +274,17 @@ $(document).ready(function () {
 
 <p>Latent Dirichlet Allocation (LDA) model is one of the most popular models in nature language processing. The intuition of the model is to discover co-occuring patterns that reflect the underlying topics which combined to form the documents. LDA is also flexible enough to be embedded in more complex models for inference, e.x. structural topic model, dynamic topic model, hierarchical topic model, etc.</p>
 <p>In single-cell analysis, LDA has been used to explore the heterogeneity in gene expression within samples. But it’s rarely used to investigate the heterogeneity in single-cell data of a patient cohort. However, we realize the great potential of LDA to explore the heterogeneity in single-cell data at patient or sample level, especially in tracking the dynamics of cell types across time.</p>
-<p>This website shows examples of applications of Latent Dirichlet Allocation (LDA) model on different types of single-cell datasets.</p>
+<p>This website shows examples of applications of Latent Dirichlet Allocation (LDA) model (We now call it <strong>TopicFlow</strong>) on different types of single-cell datasets.</p>
 <ul>
 <li><p>a scRNA-seq dataset of tumor tissue from liver cancer patients.</p></li>
 <li><p>a longitudinal flow cytometry datasets of PBMCs from melanoma patients.</p></li>
 </ul>
 <p>If you find the approach useful, please cite:</p>
 <p>X. Peng, J. Lee, M. Adamow, C. Maher, M. A. Postow, M. Callahan, K. S. Panageas, R. Shen (2022+). “Uncovering the hidden structure of dynamic T cell composition in peripheral blood during cancer immunotherapy: a topic modeling approach”. (Under Review)</p>
-<p><img src="figure.png" /></p>
+<div class="figure">
+<img src="figure.png" alt="" />
+<p class="caption"><strong>TopicFlow</strong></p>
+</div>
 
 
 
