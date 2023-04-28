@@ -26,4 +26,4 @@ composition in peripheral blood during cancer immunotherapy: a topic modeling
 approach”. (Under Review)
 
 
-![**TopicFlow**](figure.png)
+![**TopicFlow**](TopicFlow.png)
