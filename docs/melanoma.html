@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Xiyu Peng" />
+<meta name="author" content="Xiyu Peng, Jasme Lee" />
 
 
 <title>Analyzing longitudinal flow cytometry data of Malenoma patients with TopicFlow</title>
@@ -342,12 +342,413 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Analyzing longitudinal flow cytometry data of Malenoma patients with TopicFlow</h1>
-<h4 class="author">Xiyu Peng</h4>
+<h4 class="author">Xiyu Peng, Jasme Lee</h4>
+<h4 class="date">April 2023</h4>
 
 </div>
 
 
-<p>Coming soon!</p>
+<p>Here we present our whole workflow for analyzing a longitudinal flow cytometry data from a large cohort study (Starting from FCS file to figures in the manuscript). The whole workflow can be mainly devided into two parts:</p>
+<ul>
+<li><p>Single cell analysis on flow cytometry data (starting with raw FCS file)</p></li>
+<li><p>Evaluating pharmacodynamic changes of T cell composition with TopicFlow</p></li>
+</ul>
+<p>We show our method TopicFlow allows us to mine tens of millions of single cells from a large collection of patient samples to discover the underlying functional themes that characterize the immune composition and the pharmacodynamics changes in cancer patients.</p>
+<p>More details about the study can be found in the manuscript. If you find the tool is useful, please cite our paper.</p>
+<p>X. Peng, J. Lee, M. Adamow, C. Maher, M. A. Postow, M. Callahan, K. S. Panageas, R. Shen (2023+). “Uncovering the hidden structure of dynamic T cell composition in peripheral blood during cancer immunotherapy: a topic modeling approach”. (Under Review)</p>
+<div class="figure">
+<img src="TopicFlow.png" alt="" />
+<p class="caption"><strong>Overview of TopicFlow</strong></p>
+</div>
+<div id="single-cell-flow-cytometry-analysis" class="section level1">
+<h1>Single-cell flow cytometry analysis</h1>
+<div id="pre-gating-analysis-from-fcs-file-to-single-cell-dataset" class="section level2">
+<h2>Pre-gating Analysis: from FCS file to single-cell dataset</h2>
+<p>Each Flow Cytometry Standard (FCS) file acquired from the flow cytometry experiments was independently preprocessed using our in-house automated gating pipeline (built with R 4.1.3). The main preprocessing steps include (See figure below):</p>
+<ul>
+<li><p>compensation with matrices exported from FlowJo v10.8.0 software (BD Life Sciences),</p></li>
+<li><p>biexponential transformation on all marker channels with parameters extra negative decades = 0.5, width basis = -30, positive decades = 4.5,</p></li>
+<li><p>quality control via the R package flowAI (v1.22.0),</p></li>
+<li><p>pre-gating up to CD3+ T cells via the R package openCyto (v2.4.0). The pre-gating strategy, as the input to openCyto R pakcage, can be find in [here].</p></li>
+</ul>
+<div class="figure">
+<img src="Pre-gating.png" alt="" />
+<p class="caption"><strong>Pre-gating T cells from FCS file</strong></p>
+</div>
+</div>
+<div id="quality-control" class="section level2">
+<h2>Quality control</h2>
+<p>When integrating multiple samples, it is important to check if there is a batch effect. To evaluate the possible batch effect, ridge plot can help to check the consistency of transformed intensity values across multiple patient samples, as the example shown below. These Ridge plot can be easily made with the help of <a href="https://satijalab.org/seurat/index.html">Seurat</a> R package. From the figure shown below, we can find the transformed intensity values of all markers are roughly in the same scale.</p>
+<div class="figure">
+<img src="Ridgeplot.png" alt="" />
+<p class="caption"><strong>Using ridge plot to check batch effect</strong></p>
+</div>
+<p>We also recommend to downsample cells from each sample and use UMAP to check if there is a significant batch effect. You may visually assess the UMAP plots and check if there is a significant batch effect among patient samples.</p>
+</div>
+<div id="single-cell-clustering-analysis" class="section level2">
+<h2>Single-cell clustering analysis</h2>
+<p>For better visualization and analysis, we choose to use <a href="https://mojaveazure.github.io/seurat-object/index.html">Seurat Object</a>, a data structure provided by <a href="https://satijalab.org/seurat/index.html">Seurat</a> R package, to store single cell data. We provide the seurat objects (in rds files) of three patients as examples. They can be downloaded from <a href="https://data.mendeley.com/datasets/d7nkgfhc8z">here</a>. For each flow sample (FCS file), there are about 100k cell on average. For our panel, 29 markers (include live/dead, CD14-CD19 with shared fluorescence) are measured for each single cell.</p>
+<p>For pooled clustering analysis, we pool all T cells from all patient samples together. We then use Louvain algorithm, a graph-based algorithm for clustering cells. Louvain is the core algorithm of <a href="https://github.com/jacoblevine/PhenoGraph">PhenoGraph</a>, the famous python library for clustering flow cytometry data. The data file <code>seurat_object_17162_rerun_all_dim26.rds</code> that aggregate cells from all 138 samples is too big to be read by a personal laptop. We recommend to do the following analysis on a server with adequate memory space available.</p>
+<p>The code below was run on a server. We requested 250GB memory space for analyzing 17M+ T cell. It runs about 5 days.</p>
+<pre class="r"><code>library(Seurat)
+library(future)
+## parallel computing 
+plan(&quot;multiprocess&quot;, workers = 8)
+plan()
+## increase the maximal size of a data object in R
+options(future.globals.maxSize = 100000 * 1024^2)
+
+
+### data_real_marks (n_cells x n_markers) 
+### is a matrix of marker intensity values of all cells
+#pool_X50 &lt;- CreateSeuratObject(counts = t(data_real_marks), project = &quot;17-162&quot;)
+#pool_X50
+#pool_X50[[&#39;time&#39;]]&lt;-factor(time)
+#pool_X50[[&#39;patient&#39;]]&lt;-factor(patient)
+#pool_X50[[&#39;sample&#39;]]&lt;-factor(sample)
+### read the pre-saved data
+pool_X50 &lt;- readRDS(file = &quot;seurat_object_17162_rerun_all_dim26.rds&quot;)
+
+## All 27 markers are variable markers across cells
+## This step seems unnecessary but it cannot be skipped
+pool_X50 &lt;- FindVariableFeatures(object = pool_X50)
+
+### scale each markers
+all.genes &lt;- rownames(pool_X50)
+pool_X50 &lt;- ScaleData(pool_X50, features = all.genes)
+
+### PCA
+pool_X50 &lt;- RunPCA(pool_X50, features = all.genes,approx=FALSE,npcs = 26)
+
+### UMAP based on 26 PCs. 
+### Use min.dist = 0.1 for better separation
+### Recommend the default 0.3 for visualizing each patient samples
+pool_X50 &lt;- RunUMAP(pool_X50, dims = 1:26,min.dist = 0.1)
+
+### Construct KNN graph with a fast nearest neighbor search using RANN
+pool_X50 &lt;- FindNeighbors(pool_X50, dims = 1:26, nn.eps = 0.5,k.param = 5)
+
+### Clustering cell with Louvain method based on KNN under different resolutions
+### This step would be run in parallel
+res&lt;-c(0.5, 0.8, 1, 1.2, 1.5, 2, 2.5, 3)
+pool_X50 &lt;- FindClusters(pool_X50, resolution = res)
+
+saveRDS(pool_X50, file = &quot;seurat_object_17162_rerun_all_dim26.rds&quot;)</code></pre>
+<div id="alternative-approach-for-cell-clustering" class="section level3">
+<h3>Alternative approach for cell clustering</h3>
+<p>The pooled clustering strategy may not be applicable for a larger cohort study. We are working on a pipeline using <a href="https://doi.org/10.1038/s41596-021-00550-0">FlowSOM</a> for cell clustering. In FlowSOM, cells in each patient samples will be independently over-clustered using a self-organizing map (SOM, also a graph-based clustering method), then followed by a consensus clustering (using R package <a href="https://bioconductor.org/packages/release/bioc/html/ConsensusClusterPlus.html">ConsensusClusterPlus</a>) to generate meta-clusters (clusters of clusters within each sample). You may check the <a href="https://doi.org/10.1038/s41596-021-00550-0">protocol</a> of FlowSOM for further details. With the limited experience, the consensus clustering is expected to be the most time and memory consuming step in the analysis pipeline.</p>
+<p>Codes below show an example how to convert the data to FlowSOM object.</p>
+<pre class="r"><code>### select data for a single patient
+pt_seurat&lt;-subset(pool_X50,subset = patient == &quot;17-162-03&quot;)
+### convert to FlowSOM object
+data_FlowSOM&lt;-flowCore::flowFrame(t(as.matrix(pt_seurat[[&#39;RNA&#39;]]@data)))
+tmp &lt;- FlowSOM::ReadInput(data_FlowSOM, transform = FALSE, scale = FALSE)</code></pre>
+<p>For either clustering approach, you have to tun parameters to determine number of clusters. For melanoma datasets, we chose the clustering solution under resolution 1.5 with the highest average Silhouette scores. But once you have selected your clustering results, you can output cell count matrix (<code>clusterbysample</code>) per cluster per sample and visualize the clustering results with UMAP.</p>
+<pre class="r"><code>## choose resolution = 1.5
+Idents(pool_X50)&lt;-&quot;RNA_snn_res.1.5&quot;
+## output cell count per cluster per sample
+clusterbysample&lt;-table(pool_X50$sample,Idents(pool_all_X50))
+## plot UMAP for the whole cohort
+DimPlot(subset(pool_X50, idents = 1:20),reduction = &quot;umap&quot;, label = TRUE)</code></pre>
+<p>Figure below shows the UMAP plot for a single patient. We annotate key clusters based on their marker expression.</p>
+<div class="figure">
+<img src="UMAP.jpg" alt="" />
+<p class="caption"><strong>T cells of a single patient</strong></p>
+</div>
+<p>The cell count matrix <code>clusterbysample</code> contains cell type abundance for each flow sample. We further add sample information for each sample, including sample collection time and patient info, and clinical annotation for each patient, including response, toxicity, and survival data.</p>
+<p>As a tutorial for TopicFlow, the following analysis will use the supplementary data of the manuscript as the input. The supplementary data can be downloaded from <a href="https://github.com/xiyupeng/topic_modeling/blob/main/data/Supplementary%20Data%20File%20S1.csv">here</a>.</p>
+</div>
+</div>
+</div>
+<div id="explore-sample-level-heterogeneity-with-topicflow" class="section level1">
+<h1>Explore sample-level heterogeneity with TopicFlow</h1>
+<div id="getting-ready" class="section level2">
+<h2>Getting ready</h2>
+<p>Firstly, we have to install core R packages required for LDA analysis. We use the R package <em>topicmodels</em> for model inference, R package <em>slam</em> for preparing the input data, R package <em>tidytext</em> for extracting the output data.</p>
+<pre class="r"><code>library(topicmodels)
+library(slam)
+library(tidytext)</code></pre>
+<p>In this workflow, we use some R packages for data visualization and analysis. But these R packages are not necessary, you can use other similar R packages instead.</p>
+<pre class="r"><code>library(tidyverse)
+library(ComplexHeatmap)
+library(ggpubr)
+library(patchwork)</code></pre>
+<p>We read the supplementary data file of the manuscript. The file contains the cell type count for individual samples (as the result of the clustering analysis), as well as patient clinical information.</p>
+<pre class="r"><code>X50_result&lt;-read.csv(file = &quot;https://raw.githubusercontent.com/xiyupeng/topic_modeling/main/data/Supplementary%20Data%20File%20S1.csv&quot;)
+X50_result&lt;-X50_result[1:138,]  ## remove empty rows at the bottom
+## toxicity 
+X50_result$tox&lt;-as.factor(X50_result$irAE...grade.2)
+## response 
+X50_result$res&lt;-as.factor(X50_result$Best.Overall.Response)
+levels(X50_result$res)&lt;-c(&quot;CR/PR&quot;,&quot;PD/SD&quot;,&quot;CR/PR&quot;,&quot;PD/SD&quot;)
+## time point
+X50_result$Timepoint &lt;-as.factor(X50_result$Timepoint)
+X50_result$week&lt;-X50_result$Timepoint 
+levels(X50_result$week)&lt;-c(&quot;0&quot;,&quot;3&quot;,&quot;6&quot;)</code></pre>
+<p>The final input data matrix for LDA has 138 samples with 20 features (clusters), while each entry is number of cells per cluster per sample.</p>
+<pre class="r"><code>## Only focus on first 20 clusters
+X50_result %&gt;% select(starts_with(&quot;cluster&quot;))-&gt;data_matrix
+data_matrix&lt;-data_matrix[,1:20]
+head(data_matrix[,1:8])</code></pre>
+<pre><code>##   cluster0 cluster1 cluster2 cluster3 cluster4 cluster5 cluster6 cluster7
+## 1    22088    24867    13141     1441     7755     2226    12081     6480
+## 2    10363     8900     4437      897     6271      769     3709     2047
+## 3    54829    44966    20226     6102    15656     6634    29310    11716
+## 4    11159    12832    10028     7671     7280     1577      935     2926
+## 5     3894     5698     3219     5099     8561     2468      597      812
+## 6    13495    24372     3708    32126     5716    11531     2678     3786</code></pre>
+</div>
+<div id="model-inference" class="section level2">
+<h2>Model inference</h2>
+<p>We use <em>topicmodels</em> R package for model inference. We use Gibbs sampling algorithm and choose number of topics K = 3:</p>
+<ul>
+<li><p><strong>Gibbs sampling</strong>. The topicmodels R package provides two algorithms, variation EM and Gibbs sampling, for model inference. The two different algorithms may contribute to different results (See the <a href="https://cran.microsoft.com/snapshot/2016-09-30/web/packages/topicmodels/vignettes/topicmodels.pdf">documentation</a> of the <em>topicmodels</em> R package). But in the example given in the R package, the Gibbs sampling algorithm seems to return better models than Variation EM. Thus we prefer Gibbs sampling in the analysis. We used the following setting for Gibbs sampling: iter = 1000, burnin = 1000, thin = 100 (1000 Gibbs sampling draws are made with the first 1000 iterations discarded and then every 100th iteration kept).</p></li>
+<li><p><strong>K = 3</strong>. Number of topics K also needs to be selected before running the model inference. There is no ``right’’ answer to the number of topics that are the most appropriate for data. You may use R package <em>ldatuning</em> or cross-validation to select number of topics K. In this case, we failed to select the number of topics with a 10-fold cross-validation, likely a reflection of the size of the dataset (only 138 samples). Thus, we guided the choice of the number of topics based on what is most useful for scientific interpretation. Moreover, during the cross-validation, we observed the biggest drop in perplexity40 (a measure of how successfully a trained topic model predicts new data) is between K = 2 and K = 3. Thus we set K = 3 in this study.</p></li>
+</ul>
+<p>The Gibbs sampling will take several minutes. We can save the result here for further analysis. The pre-run LDA results can be downloaded from <a href="https://github.com/xiyupeng/topic_modeling/blob/main/data/lda_example_K3.Rdata">here</a>.</p>
+<p>Note: Gibbs sampling is a stochastic algorithm, but the result for this dataset is relative stable. If you choose to run LDA yourself with a different random seed or change the order of the input data, you may have to switch the order of the three topics to match the results. But generally you should be able to identify the three topics which we will describe below: activation topic, exhaustion topic, and naive topic.</p>
+<pre class="r"><code>require(slam)
+require(topicmodels)
+
+count_matrix_triplet &lt;- as.simple_triplet_matrix(data_matrix)
+
+lda&lt;-LDA(count_matrix_triplet, control = list(seed = 2021, burnin = 1000,thin = 100, iter = 1000), k = 3, method = &quot;Gibbs&quot;)
+
+save(lda, file = &quot;~/flow_cytometry/lda/lda_example_K3.Rdata&quot;)</code></pre>
+<p>Below we reload the data and check the output of the LDA model.</p>
+<pre class="r"><code>## load the data
+load(file = &quot;~/flow_cytometry/lda/lda_example_K3.Rdata&quot;)
+ntopics = 3
+
+## extract output of the LDA model
+para&lt;-posterior(lda)
+colnames(para$topics)&lt;-paste0(&quot;topic&quot;,colnames(para$topics))
+rownames(para$terms)&lt;-paste0(&quot;topic&quot;,rownames(para$terms))
+
+#### update to the meta data
+X50_result$topics&lt;-topics(lda)
+X50_result&lt;-as.data.frame(cbind(X50_result,para$topics))</code></pre>
+<p>The main output of the LDA model contains two matrix:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Topic content matrix</strong> (cell type-by-topic matrix) represents topics as different discrete distributions over cell types (clusters)</li>
+</ol>
+<pre class="r"><code>## show first five columns
+head(round(para$terms[,1:5],3))</code></pre>
+<pre><code>##        cluster0 cluster1 cluster2 cluster3 cluster4
+## topic1    0.000    0.058    0.003    0.372    0.019
+## topic2    0.219    0.159    0.176    0.010    0.053
+## topic3    0.053    0.138    0.000    0.030    0.202</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li><strong>Topic prevalence matrix</strong> (topic-by-sample matrix) displays topic proportions estimated per sample</li>
+</ol>
+<pre class="r"><code>## show first five rows
+head(round(para$topics,3))</code></pre>
+<pre><code>##   topic1 topic2 topic3
+## 1  0.009  0.972  0.018
+## 2  0.005  0.636  0.359
+## 3  0.037  0.882  0.081
+## 4  0.164  0.664  0.172
+## 5  0.189  0.193  0.618
+## 6  0.541  0.406  0.053</code></pre>
+<p>The topic prevalence matrix will be merged with the original data frame for further analysis. But before we investigating the distribution of topics over patient samples, we want to exam the topic content matrix and interpret each topic by selecting representative cell types.</p>
+</div>
+<div id="topic-content" class="section level2">
+<h2>Topic content</h2>
+<p>The intepretability of topic models is a key advantage. In text analysis, representative terms, in this case, representative clusters, are used to define topics. Sometimes people directly use the topic weights in topic content matrix to select representative terms.</p>
+<p>In this case, you can simply find clusters with top weight for each topic with <code>terms()</code>,</p>
+<pre class="r"><code>terms(lda,5)</code></pre>
+<pre><code>##      Topic 1     Topic 2    Topic 3    
+## [1,] &quot;cluster3&quot;  &quot;cluster0&quot; &quot;cluster4&quot; 
+## [2,] &quot;cluster5&quot;  &quot;cluster2&quot; &quot;cluster8&quot; 
+## [3,] &quot;cluster14&quot; &quot;cluster1&quot; &quot;cluster1&quot; 
+## [4,] &quot;cluster13&quot; &quot;cluster6&quot; &quot;cluster12&quot;
+## [5,] &quot;cluster1&quot;  &quot;cluster7&quot; &quot;cluster9&quot;</code></pre>
+<p>or visualize them with barplots.</p>
+<pre class="r"><code>### beta
+ap_topics &lt;- tidy(lda, matrix = &quot;beta&quot;)
+ap_topics$topic&lt;-as.factor(paste0(&quot;topic&quot;,ap_topics$topic))
+
+### make barplots
+ap_topics$term&lt;-gsub(&quot;cluster&quot;,&quot;&quot;,ap_topics$term)
+term_reorder&lt;-as.character(c(0,2,6,11,9,8,7,1,4,10,12,14,15,3,5,13,16,17,18,19))
+ggbarplot(ap_topics, x = &quot;term&quot;, y = &quot;beta&quot;,color = &quot;topic&quot;,fill = &quot;topic&quot;,palette = c(&quot;#D55E00&quot;, &quot;#009E73&quot;, &quot;#0072B2&quot;),facet.by = &quot;topic&quot;,nrow = 3)+xlab(&quot;T cell cluster&quot;)+scale_x_discrete(limits = term_reorder)+ylab(&quot;topic weight&quot;)</code></pre>
+<p><img src="melanoma_files/figure-html/unnamed-chunk-13-1.png" width="384" /></p>
+<p>One main drawback of using topic weight to select representatives is that high abundant clusters with little variation are likely to be selected as representatives due to their high topic weights. In our analysis, the top representative clusters from each topic are selected after ranking by lift, which is the log ratio of estimated topic weights over its empirical frequency. The lift metric gives higher weights to clusters that appear less frequently in other topics. This metric was proposed by Matt Taddy in the paper <em>On Estimation and Selection for Topic Models</em>, and is also used in the R package <em>stm</em> for <a href="https://www.structuraltopicmodel.com/">structure topic model</a>.</p>
+<p>Below we show top 10 clusters with top lift for each topic. In practice, we find the metric lift provides the most interpretable results, helping to select representative clusters for each topic. Thus we can name each topic based upon the most representative cell clusters ranked by lift:</p>
+<ul>
+<li>Topic 1 (red) mainly contains two CD8 Temra clusters (clusters 3 and 5), one CD4 cytotoxic Tem cluster (cluster 14, GzmB+), and one CD4-CD8- cluster (cluster 13). Thus we named it the <strong>Exhaustion topic</strong>.</li>
+<li>Topic 2 (green) we labeled the <strong>Naive topic</strong>, with CD4+ and CD8+ naive T cell clusters identified as the most representative clusters</li>
+<li>Topic 3 (blue) is an <strong>Activation topic</strong> The five representative cell clusters we identified include two CD4 T cell clusters (clusters 8 and 4), one CD8 T cell cluster (cluster 12), one Treg cluster (cluster 9), and one CD4-CD8- T cell cluster (cluster 16). Most of clusters of topic 3 are KI67+ and they are expanding upon ICI treatment!</li>
+</ul>
+<pre class="r"><code>### calculate the lift
+wordcounts &lt;- colSums(data_matrix)
+logbeta &lt;- lda@beta
+emp.prob &lt;- log(wordcounts) - log(sum(wordcounts))
+lift &lt;- logbeta - rep(emp.prob, each = nrow(logbeta))
+colnames(lift)&lt;-lda@terms
+lift&lt;-as.data.frame(lift)
+lift$topics&lt;-paste0(&quot;topic&quot;,1:3)
+
+#### name three topics based on the content
+new_label&lt;-c(&quot;Exhaustion Topic&quot;,&quot;Naive Topic&quot;,&quot;Activation Topic&quot;)
+names(new_label)&lt;-c(&quot;topic1&quot;,&quot;topic2&quot;,&quot;topic3&quot;)
+
+### show top 10 representative clusters for each topic
+lift_top_terms &lt;- lift %&gt;% gather(.,key = cluster,value = lift,-topics) %&gt;%
+  group_by(topics) %&gt;%
+  slice_max(lift, n = 10) %&gt;% 
+  ungroup() %&gt;%
+  arrange(topics, -lift)
+
+lift_top_terms %&gt;%
+  mutate(cluster = reorder_within(cluster, lift, topics)) %&gt;%
+  ggplot(aes(lift, cluster, fill = factor(topics))) +
+  geom_col(show.legend = FALSE,orientation = &quot;y&quot;) +
+  facet_wrap(~ topics, scales = &quot;free&quot;,labeller = labeller(topics = new_label)) + 
+  scale_y_reordered()+theme_bw()+scale_fill_manual(values=c(&quot;#D55E00&quot;, &quot;#009E73&quot;, &quot;#0072B2&quot;))+
+  xlab(&quot;lift (log-ratio of topic weight over T cell cluster frequency)&quot;)+ylab(&quot;T cell cluster&quot;)</code></pre>
+<p><img src="melanoma_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+</div>
+<div id="topic-prevalence" class="section level2">
+<h2>Topic Prevalence</h2>
+<p>A heatmap can help to visualize the distribution of topics across patients. In the heatmap, the activation topic mainly captures the expansion of Tcm/em upon treatment. For most patients, the proportion of the activation topic is near zero (dark blue) in pre-treatment samples (week 0). This topic emerges on-treatment as seen by the increase of topic proportions in weeks 3 and 6 samples. At baseline (week 0), most of the patient samples are characterized by a high presence of the naïve topic, which subsequently decreases after ICI treatment as cells transition into more “activated” states. In contrast, a small subgroup of patient samples (group1) has a low proportion of the naïve topic, but a high fraction of the exhaustion topic presented at week 0. There is no visible reduction in the exhausted T cell population after ICI treatment.</p>
+<pre class="r"><code>## set color for the heatmap
+ann_colors = list(
+  BOR = c(CR = &quot;white&quot;,PR = &quot;white&quot;, SD = &quot;firebrick&quot;,PD = &quot;firebrick&quot;),
+  Toxicity = c(N = &quot;white&quot;,Y = &quot;darkblue&quot;),
+  topics = c(`1` = &quot;#0072B2&quot;, `2` = &quot;#009E73&quot;,`3` = &quot;#D55E00&quot;,Activation = &quot;#0072B2&quot;, Naive = &quot;#009E73&quot;, Exhaustion = &quot;#D55E00&quot; ),
+  Immunotype = c(&quot;LAG-&quot; =  &quot;#555599&quot;, &quot;LAG+&quot; =  &quot;#66BBBB&quot;, PRO = &quot;#DD4444&quot;),
+  Group = c(group1 = &quot;#7570B3&quot;, group2 = &quot;#E7298A&quot;, group3 = &quot;#66A61E&quot;,group4 = &quot;#D95F02&quot;)
+)
+
+## Annotation columns
+annotation_column = data.frame(
+  topics = factor(rep(c(&quot;Exhaustion&quot;,&quot;Naive&quot;,&quot;Activation&quot;),each = 3))
+)
+
+## Annotation rows
+pt_meta&lt;-X50_result %&gt;% select(PatientID,Immunotype,tox,Best.Overall.Response) %&gt;% arrange(PatientID) %&gt;% distinct(PatientID,.keep_all = TRUE)
+colnames(pt_meta)&lt;-c(&quot;pt&quot;,&quot;Immunotype&quot;,&quot;Toxicity&quot;,&quot;BOR&quot;)
+rownames(pt_meta)&lt;-pt_meta$pt</code></pre>
+<pre class="r"><code>## reshape the gamma matrix (topic fraction) for heatmap representation
+rownames(para$topics)&lt;-X50_result$sample
+gamma_data&lt;-as.data.frame(para$topics)
+gamma_data$pt&lt;-as.factor(X50_result$PatientID)
+gamma_data$time&lt;-as.factor(X50_result$Timepoint)
+gamma_wide_wna&lt;-gamma_data %&gt;% arrange(pt, time)%&gt;%reshape(.,timevar = &quot;time&quot;,idvar = &quot;pt&quot;,direction = &quot;wide&quot;) ## keep missing value as NA in the matrix
+rownames(gamma_wide_wna)&lt;-gamma_wide_wna$pt
+head(gamma_wide_wna)</code></pre>
+<pre><code>##                  pt    topic1.A  topic2.A    topic3.A    topic1.B  topic2.B
+## 17-162-03 17-162-03 0.009041834 0.9724595 0.018498683 0.004836218 0.6358586
+## 17-162-04 17-162-04 0.164024045 0.6637842 0.172191755 0.189175217 0.1932827
+## 17-162-05 17-162-05 0.541153564 0.4059505 0.052895913 0.514424171 0.2528074
+## 17-162-06 17-162-06 0.503885702 0.4915277 0.004586648 0.414744295 0.2557640
+## 17-162-07 17-162-07 0.149698007 0.7733740 0.076928015          NA        NA
+## 17-162-08 17-162-08 0.098330457 0.7861724 0.115497130          NA        NA
+##            topic3.B   topic1.C  topic2.C   topic3.C
+## 17-162-03 0.3593051 0.03702493 0.8821435 0.08083156
+## 17-162-04 0.6175421         NA        NA         NA
+## 17-162-05 0.2327684 0.36264654 0.1611609 0.47619255
+## 17-162-06 0.3294917 0.34684247 0.4705902 0.18256733
+## 17-162-07        NA 0.13317994 0.6331067 0.23371339
+## 17-162-08        NA         NA        NA         NA</code></pre>
+<p>When making the heatmap, patient 17-162-08 was excluded since this patient only has week 0 sample and makes trouble for the heatmap. In the heatmap shown below, you can find the other two patients missing week 9 sample.</p>
+<pre class="r"><code>## exclude pt 17-162-08 in the meta data
+pt_meta_wo6&lt;-pt_meta[-6,]  
+
+## we want to use the order of patients (rows) outside the heatmap.
+## Thus patients are pre-grouped before heatmap
+ourdist&lt;-dist(gamma_wide_wna[-6,-1])  ## again, excluding pt 17-162-08 
+re&lt;-hclust(ourdist)
+group&lt;-as.data.frame(cutree(hclust(ourdist),5))  
+colnames(group)&lt;-&quot;Group&quot;
+pt_meta_wo6&lt;-cbind(pt_meta_wo6,group)
+pt_meta_wo6$Group&lt;-factor(pt_meta_wo6$Group)
+levels(pt_meta_wo6$Group)&lt;-c(&quot;group4&quot;,&quot;group3&quot;,&quot;group1&quot;,&quot;group2&quot;,&quot;group1&quot;)
+
+## reorder columns by each topic in the heatmap (still excluding pt 17-162-08)
+gamma_wide_wna_reorder&lt;-gamma_wide_wna[-6,order(colnames(gamma_wide_wna))]
+col_labels&lt;-rep(c(&quot;week0&quot;,&quot;week3&quot;,&quot;week6&quot;),3)
+
+## heatmap
+ComplexHeatmap::pheatmap(gamma_wide_wna_reorder[,-1],cluster_cols = FALSE,drop_levels = TRUE,annotation_colors = ann_colors,annotation_row = pt_meta_wo6[,2:5],col = colorRampPalette(c(&quot;navy&quot;, &quot;white&quot;, &quot;firebrick3&quot;))(50),fontsize_row= 5,labels_col = col_labels,annotation_col = annotation_column, column_split = annotation_column$topics,cutree_rows = 4)</code></pre>
+<p><img src="melanoma_files/figure-html/unnamed-chunk-17-1.png" width="1152" /></p>
+<p>LDA can not only identify the topics, but also quantify topic fraction within each sample. It can provide novel insights on complex immune phenotypes among patients and identify complex and unique pharmacodynamic changes upon treatment. We can also show topic fraction within each patient sample with stackplots, each at week 0, week 3, and week6. For better separation, we use the same order of patients as in the heatmap. The trends have been described in the heatmap.</p>
+<pre class="r"><code>## add back data of 17-162-08, which has only week 0 data
+## use the same patient order as in the heatmap
+my_orders&lt;- c(rownames(gamma_wide_wna_reorder)[re$order],&quot;17-162-08&quot;)
+my_labels&lt;-gsub(&quot;17-162*&quot;,&quot;&quot;,my_orders)
+my_labels&lt;-gsub(&quot;-&quot;,&quot;&quot;,my_labels)
+
+## stackplots for week 0
+topic_fraction&lt;-gamma_wide_wna %&gt;% 
+  select(&quot;topic1.A&quot;,&quot;topic2.A&quot;,&quot;topic3.A&quot;,&quot;pt&quot;) %&gt;%  
+  gather(key = &quot;Topic&quot;,value = &quot;fraction&quot;,-pt) %&gt;% na.omit()
+topic_fraction$Topic&lt;-as.factor(topic_fraction$Topic)
+levels(topic_fraction$Topic)&lt;-c(&quot;Activation topic&quot;, &quot;Naive topic&quot;, &quot;Exhaustion topic&quot;)
+
+p1&lt;-ggbarplot(topic_fraction,&quot;pt&quot;,&quot;fraction&quot;,fill = &quot;Topic&quot;,palette = c(&quot;#D55E00&quot;, &quot;#009E73&quot;,&quot;#0072B2&quot;),color = &quot;Topic&quot;)+scale_x_discrete(limits = my_orders[my_orders %in% topic_fraction$pt],labels = my_labels[my_orders %in% topic_fraction$pt])+ylab(&quot;Topic fraction&quot;)+xlab(&quot;Patient&quot;)
+p1&lt;-ggpar(p1,legend = &quot;none&quot;,title = &quot;week 0&quot;,font.xtickslab  = c(5,&quot;bold&quot;),xtickslab.rt = 45)
+
+## stackplots for week 3
+topic_fraction&lt;-gamma_wide_wna %&gt;% 
+  select(&quot;topic1.B&quot;,&quot;topic2.B&quot;,&quot;topic3.B&quot;,&quot;pt&quot;) %&gt;% 
+  gather(key = &quot;Topic&quot;,value = &quot;fraction&quot;,-pt) %&gt;% na.omit()
+topic_fraction$Topic&lt;-as.factor(topic_fraction$Topic)
+levels(topic_fraction$Topic)&lt;-c(&quot;Activation topic&quot;, &quot;Naive topic&quot;, &quot;Exhaustion topic&quot;)
+
+p2&lt;-ggbarplot(topic_fraction,&quot;pt&quot;,&quot;fraction&quot;,fill = &quot;Topic&quot;,palette = c(&quot;#D55E00&quot;, &quot;#009E73&quot;, &quot;#0072B2&quot;),color = &quot;Topic&quot;)+scale_x_discrete(limits = my_orders[my_orders %in% topic_fraction$pt],labels = my_labels[my_orders %in% topic_fraction$pt])+ylab(&quot;Topic fraction&quot;)+xlab(&quot;Patient&quot;)
+p2&lt;-ggpar(p2,legend = &quot;none&quot;,title = &quot;week 3&quot;,font.xtickslab  = c(5,&quot;bold&quot;),xtickslab.rt = 45)
+
+## strackplots for week 6
+topic_fraction&lt;-gamma_wide_wna %&gt;% 
+  select(&quot;topic1.C&quot;,&quot;topic2.C&quot;,&quot;topic3.C&quot;,&quot;pt&quot;) %&gt;% 
+  gather(key = &quot;Topic&quot;,value = &quot;fraction&quot;,-pt) %&gt;% na.omit()
+topic_fraction$Topic&lt;-as.factor(topic_fraction$Topic)
+levels(topic_fraction$Topic)&lt;-c(&quot;Activation topic&quot;, &quot;Naive topic&quot;, &quot;Exhaustion topic&quot;)
+
+p3&lt;-ggbarplot(topic_fraction,&quot;pt&quot;,&quot;fraction&quot;,fill = &quot;Topic&quot;,palette = c(&quot;#D55E00&quot;, &quot;#009E73&quot;, &quot;#0072B2&quot;),color = &quot;Topic&quot;)+scale_x_discrete(limits = my_orders[my_orders %in% topic_fraction$pt], labels = my_labels[my_orders %in% topic_fraction$pt])+ylab(&quot;Topic fraction&quot;)+xlab(&quot;Patient&quot;)
+p3&lt;-ggpar(p3,legend = &quot;none&quot;,title = &quot;week 6&quot;,font.xtickslab  = c(5,&quot;bold&quot;),xtickslab.rt = 45)
+
+wrap_plots(p1,p2,p3)</code></pre>
+<p><img src="melanoma_files/figure-html/unnamed-chunk-18-1.png" width="1152" /></p>
+</div>
+<div id="pharmacodynamics-of-patient-subgroups" class="section level2">
+<h2>Pharmacodynamics of patient subgroups</h2>
+<p>We may simply use boxplot to visualize the pharmacodynamics of topics within each patient subgroups. In the figure shown below, each subgroup exhibits distinct dynamic patterns within the three interpretable topics:</p>
+<ul>
+<li>Patients in groups 1 and 2 both have inferior increases in activation topic. Group 1 has the highest proportion of the exhaustion topic and group 2 has the highest naïve topic across time.</li>
+<li>Patients in group 3 have the highest increase in the activation topic compared to other groups and are accompanied by the highest decrease in the naïve topic fraction.</li>
+<li>Patients in group 4 has a high proportion of the naïve topic at week 0 and a moderate increase in the activation topic. Patients in group 4 are more likely to experience severe ICI-related toxicity compared to other groups.</li>
+</ul>
+<pre class="r"><code>## Parepare input data. add assigned group to each patient
+integrate_data&lt;-merge(gamma_data,pt_meta_wo6[,c(1,5)],by.x = &quot;pt&quot;,by.y = &quot;pt&quot;)  
+integrate_data_reformat&lt;-integrate_data %&gt;% 
+  gather(key = &quot;Topic&quot;, value = &quot;Proportion&quot;,topic1, topic2, topic3)
+integrate_data_reformat$week&lt;-as.factor(integrate_data$time)
+levels(integrate_data_reformat$week)&lt;-c(0,3,6)
+
+
+### boxplots show pharmacodynamics of four groups
+color &lt;- c(group1 = &quot;#7570B3&quot;, group2 = &quot;#E7298A&quot;, group3 = &quot;#66A61E&quot;,group4 = &quot;#D95F02&quot;)
+new_label&lt;-c(&quot;Exhaustion Topic&quot;,&quot;Naive Topic&quot;,&quot;Activation Topic&quot;)
+names(new_label)&lt;-c(&quot;topic1&quot;,&quot;topic2&quot;,&quot;topic3&quot;)
+p1&lt;-integrate_data_reformat %&gt;%
+  filter(Group == &quot;group1&quot;) %&gt;%
+  ggboxplot(.,x = &quot;week&quot;, y = &quot;Proportion&quot;,add = &quot;point&quot;,fill = color[&quot;group1&quot;])+geom_line(aes(group = pt),color = &#39;darkgray&#39;)+theme(legend.position = &quot;none&quot;)+facet_wrap(vars(Topic),nrow = 1,labeller = labeller(Topic = new_label))+ggtitle(&quot;group1&quot;)
+p2&lt;-integrate_data_reformat %&gt;%
+  filter(Group == &quot;group2&quot;) %&gt;%
+  ggboxplot(.,x = &quot;week&quot;, y = &quot;Proportion&quot;,add = &quot;point&quot;,fill = color[&quot;group2&quot;])+geom_line(aes(group = pt),color = &#39;darkgray&#39;)+theme(legend.position = &quot;none&quot;)+facet_wrap(vars(Topic),nrow = 1,labeller = labeller(Topic = new_label))+ggtitle(&quot;group2&quot;)
+p3&lt;-integrate_data_reformat %&gt;%
+  filter(Group == &quot;group3&quot;) %&gt;%
+  ggboxplot(.,x = &quot;week&quot;, y = &quot;Proportion&quot;,add = &quot;point&quot;,fill = color[&quot;group3&quot;])+geom_line(aes(group = pt),color = &#39;darkgray&#39;)+theme(legend.position = &quot;none&quot;)+facet_wrap(vars(Topic),nrow = 1,labeller = labeller(Topic = new_label))+ggtitle(&quot;group3&quot;)
+p4&lt;-integrate_data_reformat %&gt;%
+  filter(Group == &quot;group4&quot;) %&gt;%
+  ggboxplot(.,x = &quot;week&quot;, y = &quot;Proportion&quot;,add = &quot;point&quot;,fill = color[&quot;group4&quot;])+geom_line(aes(group = pt),color = &#39;darkgray&#39;)+theme(legend.position = &quot;none&quot;)+facet_wrap(vars(Topic),nrow = 1,labeller = labeller(Topic = new_label))+ggtitle(&quot;group4&quot;)
+wrap_plots(p1,p2,p3,p4,nrow = 4)</code></pre>
+<p><img src="melanoma_files/figure-html/unnamed-chunk-19-1.png" width="1152" /></p>
+</div>
+</div>
 
 
 
