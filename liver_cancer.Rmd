@@ -143,7 +143,7 @@ head(round(para$terms[,1:5],5))
 head(round(para$topics,3))
 ```
 
-The topic prevalence matrix is merged with the original data frame for further analysis. But before we investigating the distribution of topics, we want to exam the topic content matrix and interpret each topic by selecting representative cell types.
+The topic prevalence matrix will be merged with the original data frame for further analysis. But before we investigating the distribution of topics, we want to exam the topic content matrix and interpret each topic by selecting representative cell types.
 
 ```{r}
 metadata.sel.count_tumor_tissue<-as.data.frame(cbind(metadata.sel.count_tumor_tissue,para$topic))
