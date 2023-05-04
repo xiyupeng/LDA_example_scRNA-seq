@@ -397,12 +397,10 @@ div.tocify {
 <img src="Pre-gating.jpg" title="fig:" style="width:90.0%" alt="Pre-gating T cells from FCS file" />
 <details>
 <summary>
-Click here
+Click here for R code for the pre-gating steps.
 </summary>
-<p>Rcodes for key steps in pre-gating process. (working in progress)</p>
-<pre class="r"><code># 2023-05-02 JLEE added this chunk 
-
-# Load libraries
+<p>R code for key steps in pre-gating process (work in progress)</p>
+<pre class="r"><code># Load libraries
 library(openCyto)
 library(tidyverse)
 library(flowCore)
@@ -412,52 +410,29 @@ library(flowWorkspace)
 library(readxl)
 library(janitor)
 
-## **XP - what should we fill in with for the variables?
 # Set up dynamic variables 
+## Below are examples
 ## String: sample name
-pt_samp_nm = params$sample_id 
+pt_samp_nm = &quot;flow_sample_1&quot;
 
 ## File path to the FCS file
-path_fcs = params$path_fcs
+path_fcs = &quot;./flow_sample_1.fcs&quot;
 
 ## File path to the compensation matrix csv file
 ## Expect format to match flowJo exported version
-path_comp_mat = params$path_comp_mat
+path_comp_mat = &quot;./flow_sample_1_comp_mat.csv&quot;
 
 ## File path for outputs/saving
-path_out = params$path_out
+path_out = &quot;./output&quot;
 
 ## File path to gating template
-gtFile = params$path_gate_template
+gtFile = &quot;./flow_tcell_gating_template.csv&quot;
 
 ## File path to biexp parameters
 ## Expects 4 columns: full_name, ext_neg_dec, width_basis, positive_dec
 ## full name should contain the channel/dye name
 #3 remaining cols fill in with desired parameter values
-path_biexp_params = params$path_biexp_params
-
-# Example of what the above parameters could look like
-  # pt_samp_nm = &quot;17-162-08A&quot;
-  # 
-  # ## File path to the FCS file
-  # path_fcs = here::here(&quot;PICI/17-162_rerun_fixed_transf/LDA_examples/test_run/17-162-08_A_015.fcs&quot;)
-  # 
-  # ## File path to the compensation matrix csv file
-  # ## Expect format to match flowJo exported version
-  # path_comp_mat = here::here(&quot;PICI/17-162_rerun_fixed_transf/LDA_examples/test_run/17-162-08.csv&quot;)
-  # 
-  # ## File path for outputs/saving
-  # path_out = here::here(&quot;PICI/17-162_rerun_fixed_transf/LDA_examples/test_run&quot;)
-  # 
-  # ## File path to gating template
-  # gtFile = here::here(&quot;PICI/gating_template/x50_tcell_up_to_cd3_LDA_paper.csv&quot;)
-  # 
-  # ## File path to biexp parameters
-  # ## Expects 4 columns: full_name, ext_neg_dec, width_basis, positive_dec
-  # ## full name should contain the channel/dye name
-  # #3 remaining cols fill in with desired parameter values
-  # path_biexp_params = here::here(&quot;PICI/biexp_transformation_parameters/biexp_transf_parameters_X50.xlsx&quot;)
-
+path_biexp_params = &quot;./flow_biexp_param.xlsx&quot;
 
 # Load gating template
 ## Modified the T cell gating template from {openCyto}
@@ -468,7 +443,6 @@ dtTemplate = data.table::fread(gtFile)
 ### Load
 gt_tcell = openCyto::gatingTemplate(gtFile)
 
-## **XP-- do we want to show preview of gating template ?
 # Optional to check the template
 # gt_tcell
 # plot(gt_tcell)
@@ -494,9 +468,9 @@ comp.mat = read.csv(path_comp_mat,
                     header = TRUE, 
                     skip = 0) 
 
-# **XP -- do we want preview of comp mat here?
-# comp.mat %&gt;%
-#   head
+## Optional to check comp mat
+## comp.mat %&gt;%
+##   head
 
 ## Can remove the X col because that&#39;s the row names 
 comp.mat = 
@@ -526,7 +500,6 @@ comp.mat =
     else rename(.)}
 
 
-# **XP -- just a check, can remove 
 # ## Check col names are equal
 # colnames(comp.mat) == (colnames(cs) %&gt;% .[!(grepl(&quot;FSC|SSC|Time&quot;, .))])
 
@@ -562,8 +535,8 @@ biexpTrans =
 ## Give names
 names(biexpTrans) = tbl_biexp_params$FULL_NAME
 
-## **XP - more checks, can choose to remove or comment out
-## Checks that all channels have a matching biexpTrans object
+
+## Optional - Checks that all channels have a matching biexpTrans object
 # lapply(biexpTrans, 
 #        FUN = function(x){x[[&quot;transform&quot;]] %&gt;% attr(., &quot;parameters&quot;)}) %&gt;% 
 #   dplyr::bind_rows(.id = &quot;channel&quot;) 
@@ -575,8 +548,7 @@ names(biexpTrans) = tbl_biexp_params$FULL_NAME
 ## Create transformerList in order to apply to gs
 trans = transformerList(names(biexpTrans), biexpTrans)
 
-## **XP -- optional , can comment out
-# ## Check the values before transformation
+## Optional - Check the values before transformation
 # gs %&gt;% 
 #   gh_pop_get_data() %&gt;% 
 #   summary()
@@ -584,8 +556,7 @@ trans = transformerList(names(biexpTrans), biexpTrans)
 ## Apply to gs
 gs = transform(gs, trans)
 
-## **XP- optional can comment out
-## Check values after transformation
+## optional - Check values after transformation
 # gs %&gt;% 
 #   gh_pop_get_data() %&gt;% 
 #   summary()
@@ -612,7 +583,7 @@ qc_fs =
 ## Rename the sample 
 flowCore::sampleNames(qc_fs) = pt_samp_nm
 
-## convert the flowFrame obj returned in test_qc to a GatingSet to pass to openCyto
+## convert the flowFrame obj returned in qc_fs to a GatingSet to pass to openCyto
 gs_qc =  
   qc_fs %&gt;% 
   flowWorkspace::GatingSet()
