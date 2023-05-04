@@ -339,6 +339,8 @@ The data file `seurat_object_17162_rerun_all_dim26.rds`, containing cells aggreg
 We recommend to do the following analysis on a server with adequate memory space available.
 
 The code below was run on a server. We requested 250GB memory space for analyzing 17M+ T cell. It ran for about 5 days.
+We used `future` framework in Seurat for parallelization when clustering over several resolutions.
+More details can be found in the [documentation](https://satijalab.org/seurat/articles/future_vignette.html).
 
 ```{r,eval=FALSE}
 library(Seurat)
@@ -396,7 +398,10 @@ The pooled clustering strategy may not be applicable for a larger cohort study.
 We are working on a pipeline using [FlowSOM](https://doi.org/10.1038/s41596-021-00550-0) for cell clustering. 
 In FlowSOM, cells in each patient samples will be independently over-clustered using a self-organizing map (SOM, also a graph-based clustering method), then followed by a consensus clustering (using R package [ConsensusClusterPlus](https://bioconductor.org/packages/release/bioc/html/ConsensusClusterPlus.html)) to generate meta-clusters (clusters of clusters within each sample).
 You may check the [protocol](https://doi.org/10.1038/s41596-021-00550-0) of FlowSOM for further details.
-With the limited experience, the consensus clustering is expected to be the most time and memory consuming step in the analysis pipeline.
+
+We used the approach for analyzing data from another large cohort study, which includes 38M+ T cells from 300 flow samples. When clustering 38M+ cells is impossible for the pooled clustering strategy (KNN cannot be built for 38M+ cells on the server), 
+this workflow takes around 1 day with memory usage under 200GB for cell clustering.
+However, the consensus clustering step took about 90% of running time for clustering 30k cluster centroids. The algorithm is not designed for big dataset and needs to be further optimized.
 
 Codes below show an example how to convert the data to a FlowSOM object.
 ```{r,eval=FALSE}
