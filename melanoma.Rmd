@@ -426,7 +426,7 @@ for(i in 1:length(patients)){
   ### build minimal spanning tree (could be used for quality check)
   tmp <- FlowSOM::BuildMST(tmp)
   
-  ### By default The algorithm output 100 clusters per sample with xdim = 10, ydim = 10.
+  ### By default, the algorithm output 100 clusters per sample with xdim = 10, ydim = 10.
   ### here we save cell labels and centroids of the 100 clusters.
   ini_clusters<-c(ini_clusters,(i-1)*100+tmp$map$mapping[, 1])  ## cluster labels (need renamed)
   cluster_centers<-rbind(cluster_centers,tmp$map$codes)  ## cluster centroids.
@@ -787,7 +787,7 @@ wrap_plots(ps_list,guides = "collect")
 ```
 
 ```{r,echo=FALSE,fig.height=0.5,fig.align='center'}
-p1<-ggbarplot(topic_fraction,"pt","fraction",fill = "Topic",palette = c("#D55E00", "#009E73","#0072B2"),color = "Topic")+scale_x_discrete(limits = my_orders[my_orders %in% topic_fraction$pt],labels = my_labels[my_orders %in% topic_fraction$pt])+ylab("Topic fraction")+xlab("Patient")
+p1<-ggbarplot(topic_fraction,"pt","fraction",fill = "Topic",palette = c("#009E73","#D55E00","#0072B2"),color = "Topic")+scale_x_discrete(limits = my_orders[my_orders %in% topic_fraction$pt],labels = my_labels[my_orders %in% topic_fraction$pt])+ylab("Topic fraction")+xlab("Patient")
 leg<-get_legend(p1)
 as_ggplot(leg)
 ```

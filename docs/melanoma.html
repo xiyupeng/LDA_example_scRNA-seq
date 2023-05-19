@@ -696,7 +696,7 @@ saveRDS(pool_X50, file = &quot;seurat_object_17162_rerun_all_dim26.rds&quot;)</c
 <h3>Alternative approach with FlowSOM</h3>
 <p>The pooled clustering strategy may not be applicable for a larger cohort study. We are working on a pipeline using <a href="https://doi.org/10.1038/s41596-021-00550-0">FlowSOM</a> for cell clustering. In FlowSOM, cells in each patient samples will be independently over-clustered using a self-organizing map (SOM, also a graph-based clustering method), then followed by a consensus clustering (using R package <a href="https://bioconductor.org/packages/release/bioc/html/ConsensusClusterPlus.html">ConsensusClusterPlus</a>) to generate meta-clusters (clusters of clusters within each sample). You may check the <a href="https://doi.org/10.1038/s41596-021-00550-0">protocol</a> of FlowSOM for further details.</p>
 <p>We used the approach for analyzing data from another large cohort study, which includes 38M+ T cells from 300 flow samples. When clustering 38M+ cells is impossible for the pooled clustering strategy (KNN cannot be built for 38M+ cells on the server), this workflow takes around 1 day with memory usage under 200GB for cell clustering.</p>
-<p>Codes below show we do clustering on each patient sample with SOM in FlowSOM. The input data were converted from Seurat object.</p>
+<p>Codes below show how we do clustering on each patient sample with SOM in FlowSOM. The input data were converted from Seurat object.</p>
 <pre class="r"><code>## list of patient names
 patients&lt;-unique(pool_X50$patient)
 ini_clusters&lt;-c()
@@ -716,7 +716,7 @@ for(i in 1:length(patients)){
   ### build minimal spanning tree (could be used for quality check)
   tmp &lt;- FlowSOM::BuildMST(tmp)
   
-  ### By default The algorithm output 100 clusters per sample with xdim = 10, ydim = 10.
+  ### By default, the algorithm output 100 clusters per sample with xdim = 10, ydim = 10.
   ### here we save cell labels and centroids of the 100 clusters.
   ini_clusters&lt;-c(ini_clusters,(i-1)*100+tmp$map$mapping[, 1])  ## cluster labels (need renamed)
   cluster_centers&lt;-rbind(cluster_centers,tmp$map$codes)  ## cluster centroids.
