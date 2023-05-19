@@ -153,7 +153,7 @@ metadata.sel.count_tumor_tissue$pt<-gsub("_.*","",rownames(metadata.sel.count_tu
 # Representative cell types
 
 The interpretability of topic models is a key advantage. In text analysis, representative terms, in this case, representative clusters, are used to define topics. 
-Sometimes people directly use the topic weigts in topic content matrix to select representative terms.
+Sometimes people directly use the topic weights in topic content matrix to select representative terms.
 
 In this case, you can simply find clusters with top weight for each topic with `terms()`,
 
@@ -239,10 +239,10 @@ save(clinical_data_merge,file = "~/flow_cytometry/manuscript/liver cancer data/c
 
 The first step is to prepare the metadata file, combining clinical data and assigned TIME subtypes as a single data frame. 
 The clinical data file `liver_cancer_patient_clinical_data.csv` and TIME subtype data file `TIME_subtypes.csv` are supplementary data files from the original paper. The two data files can be downloaded from [here](https://github.com/xiyupeng/LDA_examples/tree/main/data).
-We have prepared the a cleaned data file `clinical_data.Rdata`, which can be downloaded from [here](https://github.com/xiyupeng/LDA_examples/raw/main/data/clinical_data.Rdata).
+We have prepared a cleaned data file `clinical_data.Rdata`, which can be downloaded from [here](https://github.com/xiyupeng/LDA_examples/raw/main/data/clinical_data.Rdata).
 Same as the paper, we also only focus on the three major histological subtypes (HCC, ICC, and CHC). 
 
-Below we upload the cleaned metadata file. 
+Below we load the cleaned metadata file. 
 This data frame has 30 columns from 111 liver cancer patients with HCC, ICC, and CHC.
 We first check column names of the 30 columns.
 
@@ -308,7 +308,7 @@ ggpar(p1,font.xtickslab  = c(5,"bold"),xtickslab.rt = 45)
 
 # Survival Analysis
 
-Based on topic fractions, we can roughly divide patients into five groups based on their topic fraction. Below we draw the Kaplan-Meier analysis plot of OS and PFS stratified by five patient subgroups.
+Based on topic fractions, we can roughly divide patients into five groups based on their topic fraction. Below we calculate the Kaplan-Meier of OS and PFS stratified by five patient subgroups.
 
 ```{r}
 data_merge$OS_state..Yes.0.<-ifelse(data_merge$OS_state..Yes.0.>0, 0, 1)
@@ -325,7 +325,7 @@ pfs<-Surv(data_merge$FPS_time, data_merge$Relapse_state..Yes.0.)
 ggsurvplot(survfit(pfs ~ Group, data = pt_meta),pval=TRUE,palette = cbPalette,censor.shape="|", censor.size=4,  legend.labs=my.labs)+ylab("Progression Free Probability")+xlab("Time(mos)")
 ```
 
-We also draw the Kaplan-Meier analysis plot of OS and PFS stratified by five TIME subtypes defined by the original paper.
+We also calculate the Kaplan-Meier of OS and PFS stratified by five TIME subtypes defined by the original paper.
 
 ```{r}
 TIMEPalette<-brewer.pal(n = 5, name = 'Dark2')
