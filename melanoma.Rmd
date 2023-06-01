@@ -341,7 +341,7 @@ The data file `seurat_object_17162_rerun_all_dim26.rds`, containing cells aggreg
 We recommend to do the following analysis on a server with adequate memory space available.
 
 The code below was run on a server. We requested 250GB memory space for analyzing 17M+ T cell. It ran for about 5 days.
-We used `future` framework in Seurat for parallelization when clustering over several resolutions.
+We used `future` framework in Seurat for parallelization when clustering with several resolutions.
 More details can be found in the [documentation](https://satijalab.org/seurat/articles/future_vignette.html).
 
 ```{r,eval=FALSE}
@@ -428,7 +428,7 @@ for(i in 1:length(patients)){
   
   ### By default, the algorithm output 100 clusters per sample with xdim = 10, ydim = 10.
   ### here we save cell labels and centroids of the 100 clusters.
-  ini_clusters<-c(ini_clusters,(i-1)*100+tmp$map$mapping[, 1])  ## cluster labels (need renamed)
+  ini_clusters<-c(ini_clusters,(i-1)*100+tmp$map$mapping[, 1])  ## create cluster labels
   cluster_centers<-rbind(cluster_centers,tmp$map$codes)  ## cluster centroids.
 
 }
@@ -438,9 +438,9 @@ The we can do consensus clustering with `ConsensusClusterPlus` to generate metac
 
 ```{r,eval=FALSE}
 ## Set maximum number of metaclusters. 
-## The algorithm will return all results with different K, from 2 to the maximum.
+## The algorithm will return all results with different K, from 2 to the maxK (30).
 K<- 30 
-## Consensus clustering. If you have few samples, you can also use the default hierarchical clustering algorithm with clusterAlg="hc"
+## Consensus clustering. If you only have a few samples, you can also use the default hierarchical clustering algorithm with clusterAlg="hc"
 results<- suppressMessages(ConsensusClusterPlus::ConsensusClusterPlus(t(cluster_centers), maxK=K, reps=100, pItem=0.9,
       pFeature=1,title="results_consensus_kmeans_final",clusterAlg="km",distance="euclidean",seed=123,plot="pdf",writeTable=TRUE,verbose = FALSE))
 
@@ -456,6 +456,7 @@ cluster_results<-as.data.frame(cluster_results)
 colnames(cluster_results)<-paste("cluster_result",2:K,sep = "_")
 rownames(cluster_results)<-colnames(pool_X50)
 pool_X50<-AddMetaData(pool_X50,cluster_results)
+## save the Seurat object
 saveRDS(pool_X50, file = "seurat_object_allsamples_flowSOM_clust_rerun.rds")
 ```
 
