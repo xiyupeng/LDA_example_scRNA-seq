@@ -37,9 +37,9 @@ More details about the study can be found in the manuscript, including the full 
 If you find the tool is useful, please cite our paper.
 
 X. Peng, J. Lee, M. Adamow, C. Maher, M. A. Postow, M. Callahan, K. S.
-Panageas, R. Shen (2023+). “Uncovering the hidden structure of dynamic T cell
+Panageas, R. Shen (2023). “Uncovering the hidden structure of dynamic T cell
 composition in peripheral blood during cancer immunotherapy: a topic modeling
-approach”. (Under Review) [[bioRxiv]](https://doi.org/10.1101/2023.04.24.538095)
+approach”. Cell Reports Methods (In press)  [doi.org/10.1016/j.crmeth.2023.100546](https://doi.org/10.1016/j.crmeth.2023.100546)
 
 
 ![**Overview of TopicFlow**](TopicFlow.png)
